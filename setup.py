@@ -14,13 +14,12 @@ setup(
     name="q2-vsearch",
     version=version,
     packages=find_packages(),
-    install_requires=['qiime >= 2.0.6'],
     author="Greg Caporaso",
     author_email="gregcaporaso@gmail.com",
     description="QIIME 2 plugin for vsearch.",
     entry_points={
-        "qiime.plugins":
+        "qiime2.plugins":
         ["q2-vsearch=q2_vsearch.plugin_setup:plugin"]
     },
     package_data={}
-)
+    )

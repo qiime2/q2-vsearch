@@ -1,11 +1,11 @@
-import qiime.plugin
+import qiime2.plugin
 
 import q2_vsearch
 import q2_vsearch._cluster_features
 from q2_types.feature_data import DNAFASTAFormat, FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 
-plugin = qiime.plugin.Plugin(
+plugin = qiime2.plugin.Plugin(
     name='vsearch',
     version=q2_vsearch.__version__,
     website='https://github.com/qiime2/q2-vsearch',
@@ -22,7 +22,7 @@ plugin.methods.register_function(
         'table': FeatureTable[Frequency],
         'represenative_seqs': FeatureData[Sequence]},
     parameters={
-        'id': qiime.plugin.Float},
+        'id': qiime2.plugin.Float % qiime2.plugin.Range(0, 1, inclusive_start=False, inclusive_end=True)},
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
         ('clustered_represenative_seqs', FeatureData[Sequence])

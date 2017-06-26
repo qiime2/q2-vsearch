@@ -6,14 +6,13 @@ import biom
 from q2_types.feature_data import DNAFASTAFormat
 
 def run_command(cmd, verbose=True):
-    if verbose:
-        print("Running external command line application. This may print "
-              "messages to stdout and/or stderr.")
-        print("The command being run is below. This command cannot "
-              "be manually re-run as it will depend on temporary files that "
-              "no longer exist.")
-        print("\nCommand:", end=' ')
-        print(" ".join(cmd), end='\n\n')
+    print("Running external command line application. This may print "
+          "messages to stdout and/or stderr.")
+    print("The command being run is below. This command cannot "
+          "be manually re-run as it will depend on temporary files that "
+          "no longer exist.")
+    print("\nCommand:", end=' ')
+    print(" ".join(cmd), end='\n\n')
     subprocess.run(cmd, check=True)
 
 def _collapse_f_from_uc(uc):
@@ -51,7 +50,7 @@ def cluster_features(represenative_seqs: DNAFASTAFormat, table: biom.Table,
     with tempfile.NamedTemporaryFile() as out_uc:
         cmd = ['vsearch', '--cluster_fast', seqs_fp, '--id', str(id),
                '--centroids', str(out_representative_seqs), '--uc',
-               out_uc.name]
+               out_uc.name, '--qmask', 'none']
         run_command(cmd)
         out_uc.seek(0)
         collapse_f = _collapse_f_from_uc(out_uc)
