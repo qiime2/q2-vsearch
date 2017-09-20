@@ -3,6 +3,7 @@ import tempfile
 import subprocess
 
 import biom
+import skbio
 from q2_types.feature_data import DNAFASTAFormat
 
 def run_command(cmd, verbose=True):
@@ -19,7 +20,7 @@ def _collapse_f_from_uc(uc):
     id_to_centroid = {}
     for line in uc:
         line = line.strip()
-        if line.startswith(b'#'):
+        if len(line) == 0 or line.startswith(b'#'):
             continue
         else:
             fields = line.split(b'\t')
@@ -43,9 +44,22 @@ def _collapse_f_from_uc(uc):
 
     return collapse_f
 
-def cluster_features(sequences: DNAFASTAFormat, table: biom.Table,
-                     id: float) -> (biom.Table, DNAFASTAFormat):
+def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
+                            id: float) -> (biom.Table, DNAFASTAFormat):
     sequences_fp = str(sequences)
+
+    feature_ids_seqs = {e.metadata['id'] for e in
+                        skbio.io.read(sequences_fp, constructor=skbio.DNA,
+                                      format='fasta')}
+    feature_ids_table = set(table.ids(axis='observation'))
+    non_overlapping_ids = feature_ids_seqs ^ feature_ids_table
+
+    if len(non_overlapping_ids) > 0:
+        raise ValueError('All feature ids must be present in table and '
+                         'sequences, but some are not. Feature ids not '
+                         'present in table and sequences are: '
+                         '%s' % ', '.join(non_overlapping_ids))
+
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as out_uc:
         cmd = ['vsearch', '--cluster_fast', sequences_fp, '--id', str(id),
@@ -56,6 +70,7 @@ def cluster_features(sequences: DNAFASTAFormat, table: biom.Table,
         collapse_f = _collapse_f_from_uc(out_uc)
 
     table = table.collapse(collapse_f, norm=False, min_group_size=1,
-                           axis='observation')
+                           axis='observation',
+                           include_collapsed_metadata=False)
 
     return table, clustered_sequences

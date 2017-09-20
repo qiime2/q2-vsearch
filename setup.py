@@ -23,5 +23,5 @@ setup(
         "qiime2.plugins":
         ["q2-vsearch=q2_vsearch.plugin_setup:plugin"]
     },
-    package_data={}
+    package_data={'q2_vsearch.tests': ['data/*']},
     )
