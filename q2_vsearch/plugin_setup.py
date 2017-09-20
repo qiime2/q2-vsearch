@@ -1,8 +1,16 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2016-2017, QIIME 2 development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# ----------------------------------------------------------------------------
+
 import qiime2.plugin
 
 import q2_vsearch
 import q2_vsearch._cluster_features
-from q2_types.feature_data import DNAFASTAFormat, FeatureData, Sequence
+from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 
 plugin = qiime2.plugin.Plugin(
@@ -28,14 +36,14 @@ plugin.methods.register_function(
         ('clustered_table', FeatureTable[Frequency]),
         ('clustered_sequences', FeatureData[Sequence]),
     ],
-    input_descriptions = {
+    input_descriptions={
         'table': 'The feature table to be clustered.',
         'sequences': 'The sequences corresponding to the features in table.',
     },
-    parameter_descriptions = {
+    parameter_descriptions={
         'id': 'The percent identity at which clustering should be performed.',
     },
-    output_descriptions = {
+    output_descriptions={
         'clustered_table': 'The table following clustering of features.',
         'clustered_sequences': 'Sequences representing clustered features.',
     },
@@ -54,6 +62,5 @@ plugin.methods.register_function(
                  'were clustered in that sample. Feature identifiers and '
                  'sequences will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
-                 'on how sequence clustering is performed.'
-                )
+                 'on how sequence clustering is performed.')
 )

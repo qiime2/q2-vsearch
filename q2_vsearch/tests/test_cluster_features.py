@@ -7,12 +7,9 @@
 # ----------------------------------------------------------------------------
 
 import os
-import unittest
 import skbio
-import subprocess
 import biom
 import numpy as np
-import pandas as pd
 
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.util import redirected_stdio
@@ -41,13 +38,13 @@ class ClusterFeatureDenovoTests(TestPluginBase):
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(input_table.ids(axis='observation'),
-                                       axis='observation')
+                                 axis='observation')
         self.assertEqual(obs_table, input_table)
 
         obs_seqs = list(skbio.io.read(str(obs_sequences),
-                        constructor=skbio.DNA, format='fasta'))
+                                      constructor=skbio.DNA, format='fasta'))
         exp_seqs = list(skbio.io.read(str(input_sequences),
-                        constructor=skbio.DNA, format='fasta'))
+                                      constructor=skbio.DNA, format='fasta'))
         print(obs_seqs)
         print(exp_seqs)
         self.assertEqual(obs_seqs, exp_seqs)

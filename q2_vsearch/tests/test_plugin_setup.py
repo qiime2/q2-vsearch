@@ -6,4 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-__version__ = "0.0.7.dev0"
+import unittest
+
+from q2_vsearch.plugin_setup import plugin as vsearch_plugin
+
+
+class PluginSetupTests(unittest.TestCase):
+
+    def test_plugin_setup(self):
+        self.assertEqual(vsearch_plugin.name, 'vsearch')

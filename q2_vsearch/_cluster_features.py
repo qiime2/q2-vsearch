@@ -1,3 +1,10 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2016-2017, QIIME 2 development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# ----------------------------------------------------------------------------
 
 import tempfile
 import subprocess
@@ -5,6 +12,7 @@ import subprocess
 import biom
 import skbio
 from q2_types.feature_data import DNAFASTAFormat
+
 
 def run_command(cmd, verbose=True):
     print("Running external command line application. This may print "
@@ -15,6 +23,7 @@ def run_command(cmd, verbose=True):
     print("\nCommand:", end=' ')
     print(" ".join(cmd), end='\n\n')
     subprocess.run(cmd, check=True)
+
 
 def _collapse_f_from_uc(uc):
     id_to_centroid = {}
@@ -43,6 +52,7 @@ def _collapse_f_from_uc(uc):
                            % id_)
 
     return collapse_f
+
 
 def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
                             id: float) -> (biom.Table, DNAFASTAFormat):
