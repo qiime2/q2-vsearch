@@ -17,6 +17,8 @@ setup(
     author="Greg Caporaso",
     author_email="gregcaporaso@gmail.com",
     description="QIIME 2 plugin for vsearch.",
+    license='BSD-3-Clause',
+    url="https://qiime2.org",
     entry_points={
         "qiime2.plugins":
         ["q2-vsearch=q2_vsearch.plugin_setup:plugin"]

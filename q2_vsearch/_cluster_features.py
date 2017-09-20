@@ -43,13 +43,13 @@ def _collapse_f_from_uc(uc):
 
     return collapse_f
 
-def cluster_features(represenative_seqs: DNAFASTAFormat, table: biom.Table,
+def cluster_features(sequences: DNAFASTAFormat, table: biom.Table,
                      id: float) -> (biom.Table, DNAFASTAFormat):
-    seqs_fp = str(represenative_seqs)
-    out_representative_seqs = DNAFASTAFormat()
+    sequences_fp = str(sequences)
+    clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as out_uc:
-        cmd = ['vsearch', '--cluster_fast', seqs_fp, '--id', str(id),
-               '--centroids', str(out_representative_seqs), '--uc',
+        cmd = ['vsearch', '--cluster_fast', sequences_fp, '--id', str(id),
+               '--centroids', str(clustered_sequences), '--uc',
                out_uc.name, '--qmask', 'none']
         run_command(cmd)
         out_uc.seek(0)
@@ -58,4 +58,4 @@ def cluster_features(represenative_seqs: DNAFASTAFormat, table: biom.Table,
     table = table.collapse(collapse_f, norm=False, min_group_size=1,
                            axis='observation')
 
-    return table, out_representative_seqs
+    return table, clustered_sequences
