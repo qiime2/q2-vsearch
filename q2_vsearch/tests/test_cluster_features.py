@@ -18,7 +18,7 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_vsearch._cluster_features import cluster_features_denovo
 
 
-class ClusterFeatureDenovoTests(TestPluginBase):
+class ClusterFeaturesDenovoTests(TestPluginBase):
 
     package = 'q2_vsearch.tests'
 
