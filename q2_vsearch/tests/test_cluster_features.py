@@ -45,8 +45,6 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                       constructor=skbio.DNA, format='fasta'))
         exp_seqs = list(skbio.io.read(str(input_sequences),
                                       constructor=skbio.DNA, format='fasta'))
-        print(obs_seqs)
-        print(exp_seqs)
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_99_percent_clustering(self):
