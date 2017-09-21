@@ -49,7 +49,8 @@ def _collapse_f_from_uc(uc):
 
 
 def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
-                            id: float) -> (biom.Table, DNAFASTAFormat):
+                            perc_identity: float
+                            )-> (biom.Table, DNAFASTAFormat):
     sequences_fp = str(sequences)
 
     feature_ids_seqs = {e.metadata['id'] for e in
@@ -66,9 +67,9 @@ def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
 
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as out_uc:
-        cmd = ['vsearch', '--cluster_fast', sequences_fp, '--id', str(id),
-               '--centroids', str(clustered_sequences), '--uc',
-               out_uc.name, '--qmask', 'none']
+        cmd = ['vsearch', '--cluster_fast', sequences_fp, '--id',
+               str(perc_identity), '--centroids', str(clustered_sequences),
+               '--uc', out_uc.name, '--qmask', 'none']
         run_command(cmd)
         out_uc.seek(0)
         collapse_f = _collapse_f_from_uc(out_uc)

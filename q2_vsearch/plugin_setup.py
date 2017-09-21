@@ -30,8 +30,8 @@ plugin.methods.register_function(
         'table': FeatureTable[Frequency],
         'sequences': FeatureData[Sequence]},
     parameters={
-        'id': qiime2.plugin.Float % qiime2.plugin.Range(
-            0, 1, inclusive_start=False, inclusive_end=True)},
+        'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
+                          0, 1, inclusive_start=False, inclusive_end=True)},
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
         ('clustered_sequences', FeatureData[Sequence]),
@@ -41,7 +41,9 @@ plugin.methods.register_function(
         'sequences': 'The sequences corresponding to the features in table.',
     },
     parameter_descriptions={
-        'id': 'The percent identity at which clustering should be performed.',
+        'perc_identity': ('The percent identity at which clustering should be '
+                          'performed. This parameter maps to vsearch\'s --id '
+                          'parameter.'),
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',

@@ -34,7 +34,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                  ['sample1', 'sample2', 'sample3'])
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=1.0)
+                sequences=input_sequences, table=input_table,
+                perc_identity=1.0)
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(input_table.ids(axis='observation'),
@@ -66,7 +67,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=0.99)
+                sequences=input_sequences, table=input_table,
+                perc_identity=0.99)
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -97,7 +99,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=0.97)
+                sequences=input_sequences, table=input_table,
+                perc_identity=0.97)
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -127,7 +130,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=0.01)
+                sequences=input_sequences, table=input_table,
+                perc_identity=0.01)
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -150,7 +154,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='All feature .* feature4'):
             clustered_table, clustered_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=1.0)
+                sequences=input_sequences, table=input_table,
+                perc_identity=1.0)
 
     def test_extra_features_in_table(self):
         input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
@@ -166,7 +171,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='All feature .* feature5'):
             clustered_table, clustered_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=1.0)
+                sequences=input_sequences, table=input_table,
+                perc_identity=1.0)
 
     def test_no_overlapping_feature_ids(self):
         input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
@@ -182,4 +188,5 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='All feature .*, feat.*'):
             clustered_table, clustered_sequences = cluster_features_denovo(
-                sequences=input_sequences, table=input_table, id=1.0)
+                sequences=input_sequences, table=input_table,
+                perc_identity=1.0)
