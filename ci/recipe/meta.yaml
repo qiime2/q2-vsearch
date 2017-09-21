@@ -1,0 +1,27 @@
+{% set data = load_setup_py_data() %}
+{% set version = data.get('version') or 'placehold' %}
+{% set release = '.'.join(version.split('.')[:2]) %}
+
+package:
+  name: q2_vsearch
+  version: {{ version }}
+
+source:
+  path: ../..
+
+build:
+  script: make install
+
+requirements:
+  build:
+    - python 3.5*
+    - setuptools
+
+  run:
+    - python 3.5*
+    - setuptools
+    - vsearch
+    - scikit-bio
+    - biom-format >=2.1.5,<2.2.0
+    - qiime2 {{ release }}.*
+    - q2-types {{ release }}.*
