@@ -82,9 +82,9 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
                          % ', '.join(non_overlapping_ids))
 
 
-def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
-                            perc_identity: float
-                            )-> (biom.Table, DNAFASTAFormat):
+def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
+                             perc_identity: float
+                             )-> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
         with tempfile.NamedTemporaryFile() as out_uc:
