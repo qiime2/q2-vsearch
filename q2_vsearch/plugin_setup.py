@@ -25,7 +25,7 @@ plugin = qiime2.plugin.Plugin(
 )
 
 plugin.methods.register_function(
-    function=q2_vsearch._cluster_features.cluster_features_denovo,
+    function=q2_vsearch._cluster_features.cluster_features_de_novo,
     inputs={
         'table': FeatureTable[Frequency],
         'sequences': FeatureData[Sequence]},

@@ -16,7 +16,7 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.util import redirected_stdio
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_vsearch._cluster_features import (cluster_features_denovo,
+from q2_vsearch._cluster_features import (cluster_features_de_novo,
                                           _fasta_with_sizes)
 
 
@@ -35,7 +35,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                   'feature4'],
                                  ['sample1', 'sample2', 'sample3'])
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=1.0)
         # order of identifiers is important for biom.Table equality
@@ -71,7 +71,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=0.99)
         # order of identifiers is important for biom.Table equality
@@ -104,7 +104,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=0.97)
         # order of identifiers is important for biom.Table equality
@@ -137,7 +137,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=0.97)
         # order of identifiers is important for biom.Table equality
@@ -170,7 +170,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=0.97)
         # order of identifiers is important for biom.Table equality
@@ -202,7 +202,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = cluster_features_denovo(
+            obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=0.01)
         # order of identifiers is important for biom.Table equality
@@ -227,7 +227,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                  ['sample1', 'sample2', 'sample3'])
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='Feature feature4 is pre'):
-            clustered_table, clustered_sequences = cluster_features_denovo(
+            clustered_table, clustered_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=1.0)
 
@@ -244,7 +244,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                  ['sample1', 'sample2', 'sample3'])
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='Some feat.*feature5.*'):
-            clustered_table, clustered_sequences = cluster_features_denovo(
+            clustered_table, clustered_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=1.0)
 
@@ -261,7 +261,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                  ['sample1', 'sample2', 'sample3'])
         with self.assertRaisesRegex(ValueError,
                                     expected_regex='Feature feature1 is pre'):
-            clustered_table, clustered_sequences = cluster_features_denovo(
+            clustered_table, clustered_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=1.0)
 
