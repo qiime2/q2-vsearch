@@ -34,11 +34,13 @@ def _collapse_f_from_uc(uc):
         else:
             fields = line.split(b'\t')
             if fields[0] == b'S':
-                id_to_centroid[fields[8].decode('utf-8')] = \
-                    fields[8].decode('utf-8')
+                sequence_id = fields[8].decode('utf-8').split(';')[0]
+                centroid_id = sequence_id
+                id_to_centroid[sequence_id] = centroid_id
             elif fields[0] == b'H':
-                id_to_centroid[fields[8].decode('utf-8')] = \
-                    fields[9].decode('utf-8')
+                sequence_id = fields[8].decode('utf-8').split(';')[0]
+                centroid_id = fields[9].decode('utf-8').split(';')[0]
+                id_to_centroid[sequence_id] = centroid_id
             else:
                 pass
 
@@ -48,31 +50,51 @@ def _collapse_f_from_uc(uc):
     return collapse_f
 
 
+def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
+    table_ids = table.ids(axis='observation')
+    sizes = {id_: size for id_, size in zip(table_ids,
+                                            table.sum(axis='observation'))}
+    output_fasta_f = open(output_fasta_fp, 'w')
+    sequence_ids = set()
+    for e in skbio.io.read(input_fasta_fp, constructor=skbio.DNA,
+                           format='fasta'):
+        feature_id = e.metadata['id']
+        feature_seq = str(e)
+        sequence_ids.add(feature_id)
+        try:
+            feature_size = sizes[feature_id]
+        except KeyError:
+            raise ValueError('Feature %s is present in sequences, but not '
+                             'in table. The set of features in sequences must '
+                             'be identical to the set of features in table.'
+                             % feature_id)
+        output_fasta_f.write('>%s;size=%d\n%s\n' %
+                             (feature_id, feature_size, feature_seq))
+    output_fasta_f.close()
+
+    table_ids = set(table_ids)
+    non_overlapping_ids = table_ids - sequence_ids
+    if len(non_overlapping_ids) != 0:
+        raise ValueError('Some feature ids are present in table, but not in '
+                         'sequences. The set of features in sequences must be '
+                         'identical to the set of features in table. Feature '
+                         'ids present in table but not sequences are: %s'
+                         % ', '.join(non_overlapping_ids))
+
+
 def cluster_features_denovo(sequences: DNAFASTAFormat, table: biom.Table,
                             perc_identity: float
                             )-> (biom.Table, DNAFASTAFormat):
-    sequences_fp = str(sequences)
-
-    feature_ids_seqs = {e.metadata['id'] for e in
-                        skbio.io.read(sequences_fp, constructor=skbio.DNA,
-                                      format='fasta')}
-    feature_ids_table = set(table.ids(axis='observation'))
-    non_overlapping_ids = feature_ids_seqs ^ feature_ids_table
-
-    if len(non_overlapping_ids) > 0:
-        raise ValueError('All feature ids must be present in table and '
-                         'sequences, but some are not. Feature ids not '
-                         'present in table and sequences are: '
-                         '%s' % ', '.join(non_overlapping_ids))
-
     clustered_sequences = DNAFASTAFormat()
-    with tempfile.NamedTemporaryFile() as out_uc:
-        cmd = ['vsearch', '--cluster_fast', sequences_fp, '--id',
-               str(perc_identity), '--centroids', str(clustered_sequences),
-               '--uc', out_uc.name, '--qmask', 'none']
-        run_command(cmd)
-        out_uc.seek(0)
-        collapse_f = _collapse_f_from_uc(out_uc)
+    with tempfile.NamedTemporaryFile() as fasta_with_sizes:
+        with tempfile.NamedTemporaryFile() as out_uc:
+            _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
+            cmd = ['vsearch', '--cluster_size', fasta_with_sizes.name, '--id',
+                   str(perc_identity), '--centroids', str(clustered_sequences),
+                   '--uc', out_uc.name, '--qmask', 'none', '--xsize']
+            run_command(cmd)
+            out_uc.seek(0)
+            collapse_f = _collapse_f_from_uc(out_uc)
 
     table = table.collapse(collapse_f, norm=False, min_group_size=1,
                            axis='observation',
