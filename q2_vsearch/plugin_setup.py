@@ -49,7 +49,7 @@ plugin.methods.register_function(
         'clustered_table': 'The table following clustering of features.',
         'clustered_sequences': 'Sequences representing clustered features.',
     },
-    name='Cluster features at user-specified percent identity.',
+    name='De novo clustering of features.',
     description=('Given a feature table and the associated feature '
                  'sequences, cluster the features based on user-specified '
                  'percent identity threshold of their sequences. This is not '
@@ -63,6 +63,55 @@ plugin.methods.register_function(
                  'sample is the sum of the frequencies of the features that '
                  'were clustered in that sample. Feature identifiers and '
                  'sequences will be inherited from the centroid feature '
+                 'of each cluster. See the vsearch documentation for details '
+                 'on how sequence clustering is performed.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._cluster_features.cluster_features_closed_reference,
+    inputs={
+        'table': FeatureTable[Frequency],
+        'sequences': FeatureData[Sequence],
+        'reference_sequences': FeatureData[Sequence]
+    },
+    parameters={
+        'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
+                          0, 1, inclusive_start=False, inclusive_end=True),
+        'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
+    },
+    outputs=[
+        ('clustered_table', FeatureTable[Frequency]),
+    ],
+    input_descriptions={
+        'table': 'The feature table to be clustered.',
+        'sequences': 'The sequences corresponding to the features in table.',
+        'reference_sequences': 'The sequences to use as cluster centroids.',
+    },
+    parameter_descriptions={
+        'perc_identity': ('The percent identity at which clustering should be '
+                          'performed. This parameter maps to vsearch\'s --id '
+                          'parameter.'),
+        'strand': ('Search plus (i.e., forward) or both (i.e., forward and '
+                   'reverse complement) strands.')
+    },
+    output_descriptions={
+        'clustered_table': 'The table following clustering of features.',
+    },
+    name='Closed-reference clustering of features.',
+    description=('Given a feature table and the associated feature '
+                 'sequences, cluster the features against a reference '
+                 'database based on user-specified '
+                 'percent identity threshold of their sequences. This is not '
+                 'a general-purpose closed-reference clustering method, but rather is '
+                 'intended to be used for clustering the results of '
+                 'quality-filtering/dereplication methods, such as DADA2, or '
+                 'for re-clustering a FeatureTable at a lower percent '
+                 'identity than it was originally clustered at. When a group '
+                 'of features in the input table are clustered into a single '
+                 'feature, the frequency of that single feature in a given '
+                 'sample is the sum of the frequencies of the features that '
+                 'were clustered in that sample. Feature identifiers '
+                 'will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
                  'on how sequence clustering is performed.')
 )
