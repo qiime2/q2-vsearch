@@ -31,7 +31,10 @@ plugin.methods.register_function(
         'sequences': FeatureData[Sequence]},
     parameters={
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
-                          0, 1, inclusive_start=False, inclusive_end=True)},
+                          0, 1, inclusive_start=False, inclusive_end=True),
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                          0, 256, inclusive_start=True, inclusive_end=True)
+    },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
         ('clustered_sequences', FeatureData[Sequence]),
@@ -44,6 +47,8 @@ plugin.methods.register_function(
         'perc_identity': ('The percent identity at which clustering should be '
                           'performed. This parameter maps to vsearch\'s --id '
                           'parameter.'),
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',
@@ -78,6 +83,8 @@ plugin.methods.register_function(
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
                           0, 1, inclusive_start=False, inclusive_end=True),
         'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                0, 256, inclusive_start=True, inclusive_end=True)
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
@@ -92,7 +99,9 @@ plugin.methods.register_function(
                           'performed. This parameter maps to vsearch\'s --id '
                           'parameter.'),
         'strand': ('Search plus (i.e., forward) or both (i.e., forward and '
-                   'reverse complement) strands.')
+                   'reverse complement) strands.'),
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',

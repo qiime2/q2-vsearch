@@ -86,7 +86,7 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
 
 
 def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
-                             perc_identity: float
+                             perc_identity: float, threads=1
                              )-> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
@@ -98,7 +98,8 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                    '--centroids', str(clustered_sequences),
                    '--uc', out_uc.name,
                    '--qmask', 'none',  # ensures no lowercase DNA chars
-                   '--xsize']
+                   '--xsize',
+                   '--threads', str(threads)]
             run_command(cmd)
             out_uc.seek(0)
             collapse_f = _collapse_f_from_uc(out_uc)
@@ -114,7 +115,7 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                                       reference_sequences: DNAFASTAFormat,
                                       perc_identity: float,
                                       strand:str ='plus',
-                                      # cores?
+                                      threads=1
                                       )-> biom.Table:
     with tempfile.NamedTemporaryFile() as out_uc:
         with tempfile.NamedTemporaryFile() as notmatched:
@@ -125,7 +126,8 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                    '--uc', out_uc.name,
                    '--strand', str(strand),
                    '--qmask', 'none',  # ensures no lowercase DNA chars
-                   '--notmatched', notmatched.name]
+                   '--notmatched', notmatched.name,
+                   '--threads', str(threads)]
             run_command(cmd)
 
             out_uc.seek(0)
