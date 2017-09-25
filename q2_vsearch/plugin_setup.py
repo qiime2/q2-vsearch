@@ -8,10 +8,12 @@
 
 import qiime2.plugin
 
-import q2_vsearch
 import q2_vsearch._cluster_features
+import q2_vsearch._cluster_sequences
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
+from q2_types.sample_data import SampleData
+from q2_types.per_sample_sequences import Sequences
 
 plugin = qiime2.plugin.Plugin(
     name='vsearch',
@@ -65,4 +67,37 @@ plugin.methods.register_function(
                  'sequences will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
                  'on how sequence clustering is performed.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._cluster_sequences.dereplicate_sequences,
+    inputs={
+        'sequences': SampleData[Sequences]
+    },
+    parameters={
+        'derep_fulllength': qiime2.plugin.Bool
+    },
+    outputs=[
+        ('dereplicated_table', FeatureTable[Frequency]),
+        ('dereplicated_sequences', FeatureData[Sequence]),
+    ],
+    input_descriptions={
+        'sequences': 'The sequences to be dereplicated.',
+    },
+    parameter_descriptions={
+        'derep_fulllength': ('If true, sequences must be identical in length '
+                             'in addition to nucleotide sequence to be '
+                             'considered replicate sequences (i.e., the '
+                             'vsearch --derep_fulllength command). If false, '
+                             'a sequence that is shorter but otherwise '
+                             'identical to another sequence will be treated '
+                             'as a replicate of the longer sequence (i.e., '
+                             'the vsearch --derep_prefix command).'),
+    },
+    output_descriptions={
+        'dereplicated_table': 'The table of dereplicated sequences.',
+        'dereplicated_sequences': 'The dereplicated sequences.',
+    },
+    name='Cluster features at user-specified percent identity.',
+    description=('Compute a feature table of ')
 )
