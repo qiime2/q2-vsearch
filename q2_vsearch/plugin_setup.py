@@ -8,10 +8,12 @@
 
 import qiime2.plugin
 
-import q2_vsearch
 import q2_vsearch._cluster_features
+import q2_vsearch._cluster_sequences
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
+from q2_types.sample_data import SampleData
+from q2_types.per_sample_sequences import Sequences
 
 plugin = qiime2.plugin.Plugin(
     name='vsearch',
@@ -127,4 +129,32 @@ plugin.methods.register_function(
                  'will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
                  'on how sequence clustering is performed.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._cluster_sequences.dereplicate_sequences,
+    inputs={
+        'sequences': SampleData[Sequences]
+    },
+    parameters={},
+    outputs=[
+        ('dereplicated_table', FeatureTable[Frequency]),
+        ('dereplicated_sequences', FeatureData[Sequence]),
+    ],
+    input_descriptions={
+        'sequences': 'The sequences to be dereplicated.',
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        'dereplicated_table': 'The table of dereplicated sequences.',
+        'dereplicated_sequences': 'The dereplicated sequences.',
+    },
+    name='Dereplicate sequences.',
+    description=('Dereplicate sequence data and create a feature table and '
+                 'feature representative sequences. Feature identfiers '
+                 'in the resulting artifacts will be the sha1 hash '
+                 'of the sequence defining each feature. If clustering of '
+                 'features into OTUs is desired, the resulting artifacts '
+                 'can be passed to the cluster_features_* methods in this '
+                 'plugin.')
 )
