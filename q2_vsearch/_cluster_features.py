@@ -44,6 +44,9 @@ def _collapse_f_from_uc(uc):
             else:
                 pass
 
+    if len(id_to_centroid) == 0:
+        raise ValueError("No sequence matches were identified by vsearch.")
+
     def collapse_f(id_, x):
         return id_to_centroid[id_]
 
@@ -72,26 +75,26 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
                              (feature_id, feature_size, feature_seq))
     output_fasta_f.close()
 
-    table_ids = set(table_ids)
-    non_overlapping_ids = table_ids - sequence_ids
-    if len(non_overlapping_ids) != 0:
-        raise ValueError('Some feature ids are present in table, but not in '
-                         'sequences. The set of features in sequences must be '
-                         'identical to the set of features in table. Feature '
-                         'ids present in table but not sequences are: %s'
-                         % ', '.join(non_overlapping_ids))
+    _error_on_nonoverlapping_ids(set(table_ids), sequence_ids,
+                                 check_extra_table_ids=True,
+                                 check_extra_sequence_ids=False)
 
 
 def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
-                             perc_identity: float
+                             perc_identity: float, threads=1
                              )-> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
         with tempfile.NamedTemporaryFile() as out_uc:
             _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
-            cmd = ['vsearch', '--cluster_size', fasta_with_sizes.name, '--id',
-                   str(perc_identity), '--centroids', str(clustered_sequences),
-                   '--uc', out_uc.name, '--qmask', 'none', '--xsize']
+            cmd = ['vsearch',
+                   '--cluster_size', fasta_with_sizes.name,
+                   '--id', str(perc_identity),
+                   '--centroids', str(clustered_sequences),
+                   '--uc', out_uc.name,
+                   '--qmask', 'none',  # ensures no lowercase DNA chars
+                   '--xsize',
+                   '--threads', str(threads)]
             run_command(cmd)
             out_uc.seek(0)
             collapse_f = _collapse_f_from_uc(out_uc)
@@ -101,3 +104,77 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                            include_collapsed_metadata=False)
 
     return table, clustered_sequences
+
+
+def _error_on_nonoverlapping_ids(table_ids, sequence_ids,
+                                 check_extra_table_ids=True,
+                                 check_extra_sequence_ids=True):
+    if check_extra_table_ids:
+        extra_table_ids = table_ids - sequence_ids
+        if len(extra_table_ids):
+            raise ValueError('Some feature ids are present in table, but not '
+                             'in sequences. The set of features in sequences '
+                             'must be identical to the set of features in '
+                             'table. Feature ids present in table but not '
+                             'sequences are: %s' % ', '.join(extra_table_ids))
+
+    if check_extra_sequence_ids:
+        extra_sequence_ids = sequence_ids - table_ids
+        if len(extra_sequence_ids):
+            raise ValueError('Some feature ids are present in sequences, but '
+                             'not in table. The set of features in sequences '
+                             'must be identical to the set of features in '
+                             'table. Feature ids present in sequences but not '
+                             'table are: %s' % ', '.join(extra_sequence_ids))
+
+
+def cluster_features_closed_reference(sequences: DNAFASTAFormat,
+                                      table: biom.Table,
+                                      reference_sequences: DNAFASTAFormat,
+                                      perc_identity: float,
+                                      strand: str ='plus',
+                                      threads=1
+                                      )-> (biom.Table, DNAFASTAFormat):
+
+    table_ids = set(table.ids(axis='observation'))
+    sequence_ids = {e.metadata['id'] for e in skbio.io.read(
+                    str(sequences), constructor=skbio.DNA, format='fasta')}
+    _error_on_nonoverlapping_ids(table_ids, sequence_ids)
+    notmatched_seqs = DNAFASTAFormat()
+    with tempfile.NamedTemporaryFile() as out_uc:
+        cmd = ['vsearch',
+               '--usearch_global', str(sequences),
+               '--id', str(perc_identity),
+               '--db', str(reference_sequences),
+               '--uc', out_uc.name,
+               '--strand', str(strand),
+               '--qmask', 'none',  # ensures no lowercase DNA chars
+               '--notmatched', str(notmatched_seqs),
+               '--threads', str(threads)]
+        run_command(cmd)
+
+        out_uc.seek(0)
+        try:
+            collapse_f = _collapse_f_from_uc(out_uc)
+        except ValueError:
+            raise ValueError('No matches were identified to '
+                             'reference_sequences. This can happen if '
+                             'sequences are not homologous to '
+                             'reference_sequences, or if sequences are '
+                             'not in the same orientation as reference_'
+                             'sequences (i.e., if sequences are reverse '
+                             'complemented with respect to reference '
+                             'sequences). Sequence orientation can be '
+                             'adjusted with the strand parameter.')
+
+        notmatched_ids = [e.metadata['id']
+                          for e in skbio.io.read(open(str(notmatched_seqs)),
+                                                 constructor=skbio.DNA,
+                                                 format='fasta')]
+    table.filter(ids_to_keep=notmatched_ids, invert=True, axis='observation',
+                 inplace=True)
+    table = table.collapse(collapse_f, norm=False, min_group_size=1,
+                           axis='observation',
+                           include_collapsed_metadata=False)
+
+    return table, notmatched_seqs
