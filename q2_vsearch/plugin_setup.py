@@ -88,6 +88,7 @@ plugin.methods.register_function(
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
+        ('notmatched_sequences', FeatureData[Sequence]),
     ],
     input_descriptions={
         'table': 'The feature table to be clustered.',
@@ -105,14 +106,16 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',
+        'notmatched_sequences': ('The sequences which failed to match any '
+                                 'reference sequences.')
     },
     name='Closed-reference clustering of features.',
     description=('Given a feature table and the associated feature '
                  'sequences, cluster the features against a reference '
                  'database based on user-specified '
                  'percent identity threshold of their sequences. This is not '
-                 'a general-purpose closed-reference clustering method, but rather is '
-                 'intended to be used for clustering the results of '
+                 'a general-purpose closed-reference clustering method, but '
+                 'rather is intended to be used for clustering the results of '
                  'quality-filtering/dereplication methods, such as DADA2, or '
                  'for re-clustering a FeatureTable at a lower percent '
                  'identity than it was originally clustered at. When a group '
