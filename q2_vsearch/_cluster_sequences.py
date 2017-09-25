@@ -17,18 +17,13 @@ import skbio.io
 from ._cluster_features import run_command
 
 
-def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
-                          derep_fulllength: bool=True
+def dereplicate_sequences(sequences: QIIME1DemuxDirFmt
                           )-> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
-    if derep_fulllength:
-        command = '--derep_fulllength'
-    else:
-        command = '--derep_prefix'
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
         seqs_fp = '%s/seqs.fna' % str(sequences)
         cmd = ['vsearch',
-               command, seqs_fp,
+               '--derep_fulllength', seqs_fp,
                '--output', str(dereplicated_sequences),
                '--relabel_sha1', '--relabel_keep',
                '--uc', out_uc.name,

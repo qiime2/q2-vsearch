@@ -74,9 +74,7 @@ plugin.methods.register_function(
     inputs={
         'sequences': SampleData[Sequences]
     },
-    parameters={
-        'derep_fulllength': qiime2.plugin.Bool
-    },
+    parameters={},
     outputs=[
         ('dereplicated_table', FeatureTable[Frequency]),
         ('dereplicated_sequences', FeatureData[Sequence]),
@@ -84,20 +82,11 @@ plugin.methods.register_function(
     input_descriptions={
         'sequences': 'The sequences to be dereplicated.',
     },
-    parameter_descriptions={
-        'derep_fulllength': ('If true, sequences must be identical in length '
-                             'in addition to nucleotide sequence to be '
-                             'considered replicate sequences (i.e., the '
-                             'vsearch --derep_fulllength command). If false, '
-                             'a sequence that is shorter but otherwise '
-                             'identical to another sequence will be treated '
-                             'as a replicate of the longer sequence (i.e., '
-                             'the vsearch --derep_prefix command).'),
-    },
+    parameter_descriptions={},
     output_descriptions={
         'dereplicated_table': 'The table of dereplicated sequences.',
         'dereplicated_sequences': 'The dereplicated sequences.',
     },
-    name='Cluster features at user-specified percent identity.',
-    description=('Compute a feature table of ')
+    name='Dereplicate sequences.',
+    description=('Compute a feature table of dereplicated sequences.')
 )
