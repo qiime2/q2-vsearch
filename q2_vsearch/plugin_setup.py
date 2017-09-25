@@ -88,7 +88,7 @@ plugin.methods.register_function(
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
-        ('notmatched_sequences', FeatureData[Sequence]),
+        ('unmatched_sequences', FeatureData[Sequence]),
     ],
     input_descriptions={
         'table': 'The feature table to be clustered.',
@@ -106,8 +106,9 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',
-        'notmatched_sequences': ('The sequences which failed to match any '
-                                 'reference sequences.')
+        'unmatched_sequences': ('The sequences which failed to match any '
+                                'reference sequences. This output maps to '
+                                'vsearch\'s --notmatched parameter.')
     },
     name='Closed-reference clustering of features.',
     description=('Given a feature table and the associated feature '

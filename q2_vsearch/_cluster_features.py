@@ -140,7 +140,7 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
     sequence_ids = {e.metadata['id'] for e in skbio.io.read(
                     str(sequences), constructor=skbio.DNA, format='fasta')}
     _error_on_nonoverlapping_ids(table_ids, sequence_ids)
-    notmatched_seqs = DNAFASTAFormat()
+    unmatched_seqs = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as out_uc:
         cmd = ['vsearch',
                '--usearch_global', str(sequences),
@@ -149,7 +149,7 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                '--uc', out_uc.name,
                '--strand', str(strand),
                '--qmask', 'none',  # ensures no lowercase DNA chars
-               '--notmatched', str(notmatched_seqs),
+               '--notmatched', str(unmatched_seqs),
                '--threads', str(threads)]
         run_command(cmd)
 
@@ -167,14 +167,14 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                              'sequences). Sequence orientation can be '
                              'adjusted with the strand parameter.')
 
-        notmatched_ids = [e.metadata['id']
-                          for e in skbio.io.read(open(str(notmatched_seqs)),
-                                                 constructor=skbio.DNA,
-                                                 format='fasta')]
-    table.filter(ids_to_keep=notmatched_ids, invert=True, axis='observation',
+        unmatched_ids = [e.metadata['id']
+                         for e in skbio.io.read(open(str(unmatched_seqs)),
+                                                constructor=skbio.DNA,
+                                                format='fasta')]
+    table.filter(ids_to_keep=unmatched_ids, invert=True, axis='observation',
                  inplace=True)
     table = table.collapse(collapse_f, norm=False, min_group_size=1,
                            axis='observation',
                            include_collapsed_metadata=False)
 
-    return table, notmatched_seqs
+    return table, unmatched_seqs
