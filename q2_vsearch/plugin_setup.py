@@ -21,6 +21,10 @@ plugin = qiime2.plugin.Plugin(
     website='https://github.com/qiime2/q2-vsearch',
     package='q2_vsearch',
     user_support_text=None,
+    short_description='Plugin for clustering and dereplicating with vsearch.',
+    description=('This plugin wraps the vsearch application, and provides '
+                 'methods for clustering and dereplicating features and '
+                 'sequences.'),
     citation_text=("Rognes T, Flouri T, Nichols B, Quince C, Mahé F. (2016) "
                    "VSEARCH: a versatile open source tool for metagenomics. "
                    "PeerJ 4:e2584. doi: 10.7717/peerj.2584")
