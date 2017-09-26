@@ -17,6 +17,7 @@ from qiime2.util import redirected_stdio
 from q2_types.feature_data import DNAFASTAFormat
 
 from q2_vsearch._cluster_features import (cluster_features_de_novo,
+                                          cluster_features_closed_reference,
                                           _fasta_with_sizes)
 
 
@@ -88,7 +89,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         exp_seqs = [exp_seqs[0], exp_seqs[3], exp_seqs[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
-    def test_97_percent_clustering(self):
+    def test_97_percent_clustering_feature1_most_abundant(self):
         input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
         input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
         input_table = biom.Table(np.array([[100, 101, 103],
@@ -264,6 +265,251 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
             clustered_table, clustered_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=input_table,
                 perc_identity=1.0)
+
+
+class ClusterFeaturesClosedReference(TestPluginBase):
+
+    package = 'q2_vsearch.tests'
+
+    def test_100_percent_clustering(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[100, 101, 103],
+                                         [7, 8, 9]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, unmatched_seqs = cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_seqs = list(skbio.io.read(str(unmatched_seqs),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = list(skbio.io.read(str(input_sequences),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = [exp_seqs[1], exp_seqs[2]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_100_percent_clustering_strand(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-2.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[100, 101, 103],
+                                         [7, 8, 9]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, unmatched_seqs = cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0,
+                strand='both')
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_seqs = list(skbio.io.read(str(unmatched_seqs),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = list(skbio.io.read(str(input_sequences),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = [exp_seqs[1], exp_seqs[2]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_no_matches(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        # ref-sequences-2.fasta are rev comps of ref-sequences-1.fasta,
+        # so if strand='both' is not passed, there should be no matches
+        ref_sequences_fp = self.get_data_path('ref-sequences-2.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+
+        with self.assertRaisesRegex(ValueError,
+                                    expected_regex='No matches were iden'):
+            cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
+
+    def test_99_percent_clustering(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[104, 106, 109],
+                                         [7, 8, 9]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, unmatched_seqs = cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=0.99)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_seqs = list(skbio.io.read(str(unmatched_seqs),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = list(skbio.io.read(str(input_sequences),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = [exp_seqs[1]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_97_percent_clustering(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[104, 106, 109],
+                                         [7, 8, 9]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, unmatched_seqs = cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=0.97)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_seqs = list(skbio.io.read(str(unmatched_seqs),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = list(skbio.io.read(str(input_sequences),
+                        constructor=skbio.DNA, format='fasta'))
+        exp_seqs = [exp_seqs[1]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_1_percent_clustering(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[100, 101, 103],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[104, 106, 109],
+                                         [8, 9, 11]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, unmatched_seqs = cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=0.01)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        # all sequences matched, so unmatched seqs is empty
+        self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
+
+    def test_extra_features_in_sequences(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[0, 1, 3], [1, 1, 2], [4, 5, 6]]),
+                                 ['feature1', 'feature2', 'feature3'],
+                                 ['sample1', 'sample2', 'sample3'])
+        with self.assertRaisesRegex(ValueError,
+                                    expected_regex='Some feat.*feature4.*'):
+            cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
+
+    def test_extra_features_in_table(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9],
+                                           [1, 1, 1]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4', 'feature5'],
+                                 ['sample1', 'sample2', 'sample3'])
+        with self.assertRaisesRegex(ValueError,
+                                    expected_regex='Some feat.*feature5.*'):
+            cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
+
+    def test_no_overlapping_feature_ids(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        ref_sequences_fp = self.get_data_path('ref-sequences-1.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+        ref_sequences = DNAFASTAFormat(ref_sequences_fp, mode='r')
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2],
+                                           [4, 5, 6],
+                                           [7, 8, 9],
+                                           [1, 1, 1]]),
+                                 ['f1', 'f2', 'f3',
+                                  'f4', 'f5'],
+                                 ['sample1', 'sample2', 'sample3'])
+        with self.assertRaisesRegex(ValueError,
+                                    expected_regex='Some feat.*f1.*'):
+            cluster_features_closed_reference(
+                sequences=input_sequences, table=input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
 
 
 class PrivateFunctionTests(TestPluginBase):
