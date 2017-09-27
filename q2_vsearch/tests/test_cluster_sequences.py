@@ -109,17 +109,6 @@ class ParseUc(TestPluginBase):
 
     package = 'q2_vsearch.tests'
 
-    def test_underscore_in_sample_id(self):
-        """ single new seed observed for sample with underscores in id
-        """
-        actual = _parse_uc(uc_minimal_w_underscores.split('\n'))
-        expected = biom.Table(np.array([[1.0]]),
-                              observation_ids=['sample_id_w_underscores_42'],
-                              sample_ids=['sample_id_w_underscores'])
-        print(actual)
-        print(expected)
-        self.assertEqual(actual, expected)
-
     def test_empty(self):
         """ empty uc file returns empty Table
         """
@@ -170,6 +159,28 @@ class ParseUc(TestPluginBase):
                               sample_ids=['f2', 'f3'])
         self.assertEqual(actual, expected)
 
+    # the following tests are new with respect to biom-format project 2.1.6
+
+    def test_underscore_in_sample_id(self):
+        """ single new seed observed for sample with underscores in id
+        """
+        actual = _parse_uc(uc_minimal_w_underscores.split('\n'))
+        expected = biom.Table(np.array([[1.0]]),
+                              observation_ids=['sample_id_w_underscores_42'],
+                              sample_ids=['sample_id_w_underscores'])
+        print(actual)
+        print(expected)
+        self.assertEqual(actual, expected)
+
+    def test_uc_w_comments_and_blank_lines(self):
+        """ uc contains comments and blank lines
+        """
+        actual = _parse_uc(uc_w_comments_and_blank_lines.split('\n'))
+        expected = biom.Table(np.array([[1.0]]),
+                              observation_ids=['f2_1539'],
+                              sample_ids=['f2'])
+        self.assertEqual(actual, expected)
+
 
 # no hits or library seeds
 uc_empty = """
@@ -183,6 +194,20 @@ S	0	133	*	*	*	*	*	1539	*
 # contains single new (de novo) seed hit
 uc_minimal = """
 S	0	133	*	*	*	*	*	f2_1539	*
+"""
+
+# contains single new (de novo) seed hit
+uc_w_comments_and_blank_lines = """# sdfsdfsdf
+
+
+# dfasdfsdf
+# sdffsdfsd
+
+S	0	133	*	*	*	*	*	f2_1539	*
+
+# sdfsdfsdfsdfsdfsdsdfsf
+# asdasddpeanutdfdffsdfsdfsdfsdsdfsd sdfsdfsdf sdfdsf
+
 """
 
 # contains single seed hit for a sample with underscores in its id

@@ -84,12 +84,16 @@ def _parse_uc(fh):
 
         if line_type == 'H' or line_type == 'S':
             # get the sample id
-            underscore_index = query_id.rfind('_')
-            if underscore_index == -1:
+            try:
+                # the following line is modified from biom-format 2.1.6 to
+                # find the last underscore rather than the first
+                underscore_index = query_id.rindex('_')
+            except ValueError:
                 raise ValueError(
                  "A query sequence was encountered that does not have an "
                  "underscore. An underscore is required in all query "
                  "sequence identifiers to indicate the sample identifier.")
+
             # get the sample id and its index, creating the index if it is the
             # first time we're seeing this id
             sample_id = query_id[:underscore_index]
