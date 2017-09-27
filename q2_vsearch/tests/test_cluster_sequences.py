@@ -15,7 +15,8 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.util import redirected_stdio
 from q2_types.per_sample_sequences import QIIME1DemuxDirFmt
 
-from q2_vsearch._cluster_sequences import dereplicate_sequences
+from q2_vsearch._cluster_sequences import (dereplicate_sequences,
+                                           _parse_uc)
 
 
 class DereplicateSequences(TestPluginBase):
@@ -97,3 +98,118 @@ class DereplicateSequences(TestPluginBase):
                                                'e2492c6a7b971'),
                                         'description': 's2_2'})]
         self.assertEqual(obs_seqs, exp_seqs)
+
+
+class ParseUc(TestPluginBase):
+    # These tests and the test data below them is copied from the biom-format
+    # project temporarily to fix a bug in handling of sample ids with
+    # underscores in them. This code will be contribued back upstream to the
+    # biom-format project, and will be removed from this plugin when a
+    # biom-format release is available that contains this fix.
+
+    package = 'q2_vsearch.tests'
+
+    def test_underscore_in_sample_id(self):
+        """ single new seed observed for sample with underscores in id
+        """
+        actual = _parse_uc(uc_minimal_w_underscores.split('\n'))
+        expected = biom.Table(np.array([[1.0]]),
+                              observation_ids=['sample_id_w_underscores_42'],
+                              sample_ids=['sample_id_w_underscores'])
+        print(actual)
+        print(expected)
+        self.assertEqual(actual, expected)
+
+    def test_empty(self):
+        """ empty uc file returns empty Table
+        """
+        actual = _parse_uc(uc_empty.split('\n'))
+        expected = biom.Table(np.array([[]]),
+                              observation_ids=[],
+                              sample_ids=[])
+        self.assertEqual(actual, expected)
+
+    def test_minimal(self):
+        """ single new seed observed
+        """
+        actual = _parse_uc(uc_minimal.split('\n'))
+        expected = biom.Table(np.array([[1.0]]),
+                              observation_ids=['f2_1539'],
+                              sample_ids=['f2'])
+        self.assertEqual(actual, expected)
+
+    def test_lib_minimal(self):
+        """ single library seed observed
+        """
+        actual = _parse_uc(uc_lib_minimal.split('\n'))
+        expected = biom.Table(np.array([[1.0]]),
+                              observation_ids=['295053'],
+                              sample_ids=['f2'])
+        self.assertEqual(actual, expected)
+
+    def test_invalid(self):
+        """ invalid query sequence identifier detected
+        """
+        self.assertRaises(ValueError, _parse_uc, uc_invalid_id.split('\n'))
+
+    def test_seed_hits(self):
+        """ multiple new seeds observed
+        """
+        actual = _parse_uc(uc_seed_hits.split('\n'))
+        expected = biom.Table(np.array([[2.0, 1.0], [0.0, 1.0]]),
+                              observation_ids=['f2_1539', 'f3_44'],
+                              sample_ids=['f2', 'f3'])
+        self.assertEqual(actual, expected)
+
+    def test_mixed_hits(self):
+        """ new and library seeds observed
+        """
+        actual = _parse_uc(uc_mixed_hits.split('\n'))
+        expected = biom.Table(np.array([[2.0, 1.0], [0.0, 1.0], [1.0, 0.0]]),
+                              observation_ids=['f2_1539', 'f3_44', '295053'],
+                              sample_ids=['f2', 'f3'])
+        self.assertEqual(actual, expected)
+
+
+# no hits or library seeds
+uc_empty = """
+"""
+
+# label not in qiime post-split-libraries format
+uc_invalid_id = """
+S	0	133	*	*	*	*	*	1539	*
+"""
+
+# contains single new (de novo) seed hit
+uc_minimal = """
+S	0	133	*	*	*	*	*	f2_1539	*
+"""
+
+# contains single seed hit for a sample with underscores in its id
+uc_minimal_w_underscores = """
+S	0	133	*	*	*	*	*	sample_id_w_underscores_42	*
+"""
+
+# contains single library (reference) seed hit
+uc_lib_minimal = """
+L	3	1389	*	*	*	*	*	295053	*
+H	3	133	100.0	+	0	0	519I133M737I	f2_1539	295053
+"""
+
+# contains new seed (de novo) hits only
+uc_seed_hits = """
+S	0	133	*	*	*	*	*	f2_1539	*
+H	0	141	100.0	+	0	0	133M8D	f3_42	f2_1539
+H	0	141	100.0	+	0	0	133M8D	f2_43	f2_1539
+S	0	133	*	*	*	*	*	f3_44	*
+"""
+
+# contains library (reference) and new seed (de novo) hits
+uc_mixed_hits = """
+S	0	133	*	*	*	*	*	f2_1539	*
+H	0	141	100.0	+	0	0	133M8D	f3_42	f2_1539
+H	0	141	100.0	+	0	0	133M8D	f2_43	f2_1539
+S	0	133	*	*	*	*	*	f3_44	*
+L	3	1389	*	*	*	*	*	295053	*
+H	3	133	100.0	+	0	0	519I133M737I	f2_1539	295053
+"""
