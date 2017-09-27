@@ -103,7 +103,8 @@ class DereplicateSequences(TestPluginBase):
 class ParseUc(TestPluginBase):
     # These tests and the test data below them is copied from the biom-format
     # project temporarily to fix a bug in handling of sample ids with
-    # underscores in them. This code will be contribued back upstream to the
+    # underscores in them (https://github.com/biocore/biom-format/issues/758).
+    # This code will be contribued back upstream to the
     # biom-format project, and will be removed from this plugin when a
     # biom-format release is available that contains this fix.
 

@@ -19,8 +19,9 @@ from ._cluster_features import run_command
 
 def _parse_uc(fh):
     """ This function is copied from the biom-format project temporarily to
-        fix a bug in handling of sample ids with underscores in them. This
-        code will be contribued back upstream to the biom-format project, and
+        fix a bug in handling of sample ids with underscores in them
+        (https://github.com/biocore/biom-format/issues/758). This code
+        will be contributed back upstream to the biom-format project, and
         will be removed from this plugin when a biom-format release is
         available that contains this fix.
 
