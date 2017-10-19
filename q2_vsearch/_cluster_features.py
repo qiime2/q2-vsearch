@@ -81,7 +81,7 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
 
 
 def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
-                             perc_identity: float, threads=1
+                             perc_identity: float, threads: int=1
                              )-> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
@@ -133,7 +133,7 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                                       reference_sequences: DNAFASTAFormat,
                                       perc_identity: float,
                                       strand: str ='plus',
-                                      threads=1
+                                      threads: int=1
                                       )-> (biom.Table, DNAFASTAFormat):
 
     table_ids = set(table.ids(axis='observation'))
