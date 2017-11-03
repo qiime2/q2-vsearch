@@ -6,11 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
 import tempfile
 import subprocess
+import sqlite3
 
 import biom
 import skbio
+from qiime2 import Metadata
 from q2_types.feature_data import DNAFASTAFormat
 
 
@@ -25,8 +28,28 @@ def run_command(cmd, verbose=True):
     subprocess.run(cmd, check=True)
 
 
-def _collapse_f_from_uc(uc):
-    id_to_centroid = {}
+def _uc_to_sqlite(uc):
+    '''Parse uc-style file into a SQLite in-memory database.
+
+    This populates an in-memory database with the following schema (displayed
+    below with dummy data):
+
+        feature_id | cluster_id | count
+        -----------|------------|-------
+        feature1   | r1         | 204
+        feature2   | r2         | 4
+        feature3   | r1         | 15
+        feature4   | r2         | 24
+        feature5   | r2         | 16
+    '''
+    conn = sqlite3.connect(':memory:')
+    c = conn.cursor()
+    # The PK constraint ensures that there are no duplicate Feature IDs
+    c.execute('CREATE TABLE feature_cluster_map (feature_id TEXT PRIMARY KEY,'
+              'cluster_id TEXT NOT NULL, count INTEGER);')
+    conn.commit()
+    insert_stmt = 'INSERT INTO feature_cluster_map VALUES (?, ?, ?);'
+
     for line in uc:
         line = line.strip()
         if len(line) == 0 or line.startswith(b'#'):
@@ -35,14 +58,30 @@ def _collapse_f_from_uc(uc):
             fields = line.split(b'\t')
             if fields[0] == b'S':
                 sequence_id = fields[8].decode('utf-8').split(';')[0]
-                centroid_id = sequence_id
-                id_to_centroid[sequence_id] = centroid_id
+                c.execute(insert_stmt, (sequence_id, sequence_id, None))
             elif fields[0] == b'H':
-                sequence_id = fields[8].decode('utf-8').split(';')[0]
                 centroid_id = fields[9].decode('utf-8').split(';')[0]
-                id_to_centroid[sequence_id] = centroid_id
+                sequence_id = fields[8].decode('utf-8').split(';size=')
+                sequence_id, count = sequence_id[0], sequence_id[1]
+                c.execute(insert_stmt, (sequence_id, centroid_id, count))
             else:
                 pass
+    conn.commit()
+    return conn
+
+
+def _collapse_f_from_sqlite(conn):
+    c = conn.cursor()
+    # This query produces the following results:
+    # feature_id | cluster_id
+    # -----------|------------
+    # feature1   | r1
+    # feature2   | r2
+    # feature3   | r1
+    # feature4   | r2
+    # feature4   | r2
+    c.execute('SELECT feature_id, cluster_id FROM feature_cluster_map;')
+    id_to_centroid = dict(c.fetchall())
 
     if len(id_to_centroid) == 0:
         raise ValueError("No sequence matches were identified by vsearch.")
@@ -51,6 +90,47 @@ def _collapse_f_from_uc(uc):
         return id_to_centroid[id_]
 
     return collapse_f
+
+
+def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
+    input_seqs = skbio.read(input_fasta_fp, format='fasta',
+                            constructor=skbio.DNA)
+    c = conn.cursor()
+    # Create a second in-memory table with the following schema (including
+    # dummy data):
+    # feature_id | sequence_string
+    # -----------|------------------
+    # feature1   | ACGTACGTACGTACGT
+    # feature2   | GGGGAAAACCCCTTTT
+    # feature3   | TCAGAAAATTTTTCAG
+    # feature4   | AAAAAAAAAAAAAAAA
+    # feature5   | GGGGGGGGGGGGGGGG
+    c.execute('CREATE TABLE rep_seqs (feature_id TEXT PRIMARY KEY, '
+              'sequence_string TEXT NOT NULL);')
+    for seq in input_seqs:
+        c.execute('INSERT INTO rep_seqs VALUES (?, ?);', (seq.metadata['id'],
+                                                          str(seq)))
+    conn.commit()
+    # The results from this query should look like the following (including
+    # dummy data):
+    # cluster_id | sequence_string
+    # -----------|------------------
+    # r1         | ACGTACGTACGTACGT
+    # r2         | AAAAAAAAAAAAAAAA
+    c.execute('''SELECT fcm.cluster_id, rs.sequence_string
+                   FROM (
+                          SELECT cluster_id, MAX(count) AS count
+                            FROM feature_cluster_map
+                        GROUP BY cluster_id
+                        )
+                          AS g
+             INNER JOIN feature_cluster_map fcm
+                  USING(cluster_id, count)
+             INNER JOIN rep_seqs rs
+                  USING(feature_id);''')
+    with open(output_fasta_fp, 'w') as output_seqs:
+        for (id_, seq) in c.fetchall():
+            output_seqs.write('>%s\n%s\n' % (id_, seq))
 
 
 def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
@@ -97,7 +177,9 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                    '--threads', str(threads)]
             run_command(cmd)
             out_uc.seek(0)
-            collapse_f = _collapse_f_from_uc(out_uc)
+
+            conn = _uc_to_sqlite(out_uc)
+            collapse_f = _collapse_f_from_sqlite(conn)
 
     table = table.collapse(collapse_f, norm=False, min_group_size=1,
                            axis='observation',
@@ -134,28 +216,48 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                                       perc_identity: float,
                                       strand: str ='plus',
                                       threads: int=1
-                                      )-> (biom.Table, DNAFASTAFormat):
+                                      )-> (biom.Table, DNAFASTAFormat,
+                                           DNAFASTAFormat):
 
     table_ids = set(table.ids(axis='observation'))
     sequence_ids = {e.metadata['id'] for e in skbio.io.read(
                     str(sequences), constructor=skbio.DNA, format='fasta')}
     _error_on_nonoverlapping_ids(table_ids, sequence_ids)
-    unmatched_seqs = DNAFASTAFormat()
-    with tempfile.NamedTemporaryFile() as out_uc:
+    matched_seqs, unmatched_seqs = DNAFASTAFormat(), DNAFASTAFormat()
+
+    with tempfile.NamedTemporaryFile() as fasta_with_sizes, \
+            tempfile.NamedTemporaryFile() as out_uc, \
+            tempfile.NamedTemporaryFile() as tmp_unmatched_seqs:
+        _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
         cmd = ['vsearch',
-               '--usearch_global', str(sequences),
+               '--usearch_global', fasta_with_sizes.name,
                '--id', str(perc_identity),
                '--db', str(reference_sequences),
                '--uc', out_uc.name,
                '--strand', str(strand),
                '--qmask', 'none',  # ensures no lowercase DNA chars
-               '--notmatched', str(unmatched_seqs),
+               '--notmatched', tmp_unmatched_seqs.name,
                '--threads', str(threads)]
         run_command(cmd)
-
         out_uc.seek(0)
+
+        tmp_unmatched_seqs.seek(0, os.SEEK_END)
+        if tmp_unmatched_seqs.tell() > 0:
+            # We don't really need to sort the matched sequences, this
+            # is just to let us use --xsize, which strips the counts from
+            # the Feature ID. It would be more ideal if --usearch_global,
+            # above let us pass in --xsize, but unfortunately it isn't
+            # supported.
+            cmd = ['vsearch',
+                   '--sortbysize', tmp_unmatched_seqs.name,
+                   '--xsize',
+                   '--output', str(unmatched_seqs)]
+            run_command(cmd)
+
         try:
-            collapse_f = _collapse_f_from_uc(out_uc)
+            conn = _uc_to_sqlite(out_uc)
+            collapse_f = _collapse_f_from_sqlite(conn)
+            _fasta_from_sqlite(conn, str(sequences), str(matched_seqs))
         except ValueError:
             raise ValueError('No matches were identified to '
                              'reference_sequences. This can happen if '
@@ -177,4 +279,48 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                            axis='observation',
                            include_collapsed_metadata=False)
 
-    return table, unmatched_seqs
+    return table, matched_seqs, unmatched_seqs
+
+
+def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
+                                    perc_identity, strand='plus', threads=1):
+
+    cluster_features_closed_reference = ctx.get_action(
+        'vsearch', 'cluster_features_closed_reference')
+    filter_features = ctx.get_action('feature_table', 'filter_features')
+    cluster_features_de_novo = ctx.get_action(
+        'vsearch', 'cluster_features_de_novo')
+    merge = ctx.get_action('feature_table', 'merge')
+    merge_seq_data = ctx.get_action('feature_table', 'merge_seq_data')
+
+    closed_ref_table, rep_seqs, unmatched_seqs = \
+        cluster_features_closed_reference(
+            sequences=sequences, table=table,
+            reference_sequences=reference_sequences,
+            perc_identity=perc_identity,
+            strand=strand, threads=threads)
+
+    unmatched_seqs_md = None
+    try:
+        unmatched_seqs_md = Metadata.from_artifact(unmatched_seqs)
+    except ValueError:  # Empty seqs
+        pass
+
+    if unmatched_seqs_md is not None:
+        unmatched_table, = filter_features(table=table,
+                                           metadata=unmatched_seqs_md)
+
+        de_novo_table, de_novo_seqs = cluster_features_de_novo(
+            sequences=unmatched_seqs, table=unmatched_table,
+            perc_identity=perc_identity, threads=threads)
+
+        merged_table, = merge(table1=closed_ref_table, table2=de_novo_table,
+                              overlap_method='error_on_overlapping_feature')
+
+        merged_rep_seqs, = merge_seq_data(data1=rep_seqs, data2=de_novo_seqs)
+
+        merged_reference_seqs, = merge_seq_data(data1=reference_sequences,
+                                                data2=de_novo_seqs)
+        return merged_table, merged_rep_seqs, merged_reference_seqs
+    else:
+        return closed_ref_table, rep_seqs, reference_sequences

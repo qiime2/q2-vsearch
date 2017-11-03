@@ -96,6 +96,7 @@ plugin.methods.register_function(
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
+        ('clustered_sequences', FeatureData[Sequence]),
         ('unmatched_sequences', FeatureData[Sequence]),
     ],
     input_descriptions={
@@ -114,9 +115,11 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',
-        'unmatched_sequences': ('The sequences which failed to match any '
-                                'reference sequences. This output maps to '
-                                'vsearch\'s --notmatched parameter.')
+        'clustered_sequences': 'The sequences representing clustered '
+                               'features, relabeled by the reference IDs.',
+        'unmatched_sequences': 'The sequences which failed to match any '
+                               'reference sequences. This output maps to '
+                               'vsearch\'s --notmatched parameter.'
     },
     name='Closed-reference clustering of features.',
     description=('Given a feature table and the associated feature '
@@ -135,6 +138,63 @@ plugin.methods.register_function(
                  'will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
                  'on how sequence clustering is performed.')
+)
+
+plugin.pipelines.register_function(
+    function=q2_vsearch._cluster_features.cluster_features_open_reference,
+    inputs={
+        'table': FeatureTable[Frequency],
+        'sequences': FeatureData[Sequence],
+        'reference_sequences': FeatureData[Sequence]
+    },
+    parameters={
+        'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
+                          0, 1, inclusive_start=False, inclusive_end=True),
+        'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                0, 256, inclusive_start=True, inclusive_end=True)
+    },
+    outputs=[
+        ('clustered_table', FeatureTable[Frequency]),
+        ('clustered_sequences', FeatureData[Sequence]),
+        ('new_reference_sequences', FeatureData[Sequence]),
+    ],
+    input_descriptions={
+        'table': 'The feature table to be clustered.',
+        'sequences': 'The sequences corresponding to the features in table.',
+        'reference_sequences': 'The sequences to use as cluster centroids.',
+    },
+    parameter_descriptions={
+        'perc_identity': ('The percent identity at which clustering should be '
+                          'performed. This parameter maps to vsearch\'s --id '
+                          'parameter.'),
+        'strand': ('Search plus (i.e., forward) or both (i.e., forward and '
+                   'reverse complement) strands.'),
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
+    },
+    output_descriptions={
+        'clustered_table': 'The table following clustering of features.',
+        'clustered_sequences': 'Sequences representing clustered features.',
+        'new_reference_sequences': 'The new reference sequences.',
+    },
+    name='Open-reference clustering of features.',
+    description='Given a feature table and the associated feature sequences, '
+                'cluster the features against a reference database based on '
+                'user-specified percent identity threshold of their sequences.'
+                ' Any sequences that don\'t match are then clustered de novo. '
+                'This is not a general-purpose clustering method, but rather '
+                'is intended to be used for clustering the results of '
+                'quality-filtering/dereplication methods, such as DADA2, or '
+                'for re-clustering a FeatureTable at a lower percent identity '
+                'than it was originally clustered at. When a group of '
+                'features in the input table are clustered into a single '
+                'feature, the frequency of that single feature in a given '
+                'sample is the sum of the frequencies of the features that '
+                'were clustered in that sample. Feature identifiers and '
+                'sequences will be inherited from the centroid feature '
+                'of each cluster. See the vsearch documentation for details '
+                'on how sequence clustering is performed.',
 )
 
 plugin.methods.register_function(
