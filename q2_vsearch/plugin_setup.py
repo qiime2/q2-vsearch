@@ -10,10 +10,12 @@ import qiime2.plugin
 
 import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
+import q2_vsearch._join_pairs
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 from q2_types.sample_data import SampleData
-from q2_types.per_sample_sequences import Sequences
+from q2_types.per_sample_sequences import (
+    Sequences, PairedEndSequencesWithQuality, JoinedSequencesWithQuality)
 
 plugin = qiime2.plugin.Plugin(
     name='vsearch',
@@ -161,4 +163,69 @@ plugin.methods.register_function(
                  'features into OTUs is desired, the resulting artifacts '
                  'can be passed to the cluster_features_* methods in this '
                  'plugin.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._join_pairs.join_pairs,
+    inputs={
+        'demultiplexed_seqs': SampleData[PairedEndSequencesWithQuality]
+    },
+    parameters={
+        'truncqual': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'minlen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'maxns': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'allowmergestagger': qiime2.plugin.Bool,
+        'minovlen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'maxdiffs': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'maxee': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'qmin': qiime2.plugin.Int % qiime2.plugin.Range(
+            -5, 2, inclusive_start=True, inclusive_end=True),
+        'qminout': qiime2.plugin.Int % qiime2.plugin.Range(
+            -5, 2, inclusive_start=True, inclusive_end=True),
+        'qmax': qiime2.plugin.Int % qiime2.plugin.Range(
+            40, 41, inclusive_start=True, inclusive_end=True),
+        'qmaxout': qiime2.plugin.Int % qiime2.plugin.Range(
+            40, 41, inclusive_start=True, inclusive_end=True),
+    },
+    outputs=[
+        ('joined_sequences', SampleData[JoinedSequencesWithQuality])
+    ],
+    input_descriptions={
+        'demultiplexed_seqs': ('The demultiplexed paired-end sequences to '
+                               'be joined.'),
+    },
+    parameter_descriptions={
+        'truncqual': ('Truncate sequences at the first base with the '
+                      'specified quality score value or lower.'),
+        'minlen': ('Sequences shorter than minlen after truncation are '
+                   'discarded.'),
+        'maxns': ('Sequences with more than maxns N characters are '
+                  'discarded.'),
+        'allowmergestagger': ('Allow joining of staggered read pairs.'),
+        'minovlen': ('Minimum overlap length of forward and reverse reads '
+                     'for joining.'),
+        'maxdiffs': ('Maximum number of mismatches in the forward/reverse '
+                     'read overlap for joining.'),
+        'minmergelen': ('Minimum length of the joined read to be retained.'),
+        'maxmergelen': ('Maximum length of the joined read to be retained.'),
+        'maxee': ('Maximum number of expected errors in the joined read '
+                  'to be retained.'),
+        'qmin': ('The minimum allowed quality score in the input.'),
+        'qminout': ('The minimum allowed quality score to use in output.'),
+        'qmax': ('The maximum allowed quality score in the input.'),
+        'qmaxout': ('The maximum allowed quality score to use in output.'),
+    },
+    output_descriptions={
+        'joined_sequences': ('The joined sequences.'),
+    },
+    name='Join paired-end reads.',
+    description=('Join paired-end sequence reads using vsearch\'s '
+                 'merge_pairs function. The qmin, qminout, qmax, and qmaxout '
+                 'parameters should only need to be modified when working '
+                 'with older fastq sequence data. See the vsearch '
+                 'documentation for details on how paired-end joining is '
+                 'performed, and for more information on the parameters to '
+                 'this method.')
 )
