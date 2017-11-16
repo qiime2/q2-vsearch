@@ -51,7 +51,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                       ['feature1', 'feature2', 'feature3',
                                        'feature4'],
                                       ['sample1', 'sample2', 'sample3'])
-        self.exp_seqs = _read_seqs(self.input_sequences)
+        self.input_sequences_list = _read_seqs(self.input_sequences)
 
     def test_no_clustering(self):
         with redirected_stdio(stderr=os.devnull):
@@ -67,8 +67,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         obs_seqs = _read_seqs(obs_sequences)
 
         # sequences are reverse-sorted by abundance in output
-        exp_seqs = [self.exp_seqs[0], self.exp_seqs[3], self.exp_seqs[2],
-                    self.exp_seqs[1]]
+        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
+                    self.input_sequences_list[2], self.input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_99_percent_clustering(self):
@@ -91,7 +91,8 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.exp_seqs[0], self.exp_seqs[3], self.exp_seqs[1]]
+        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
+                    self.input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_97_percent_clustering_feature1_most_abundant(self):
@@ -112,7 +113,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.exp_seqs[0], self.exp_seqs[1]]
+        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_97_percent_clustering_feature3_most_abundant(self):
@@ -140,7 +141,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.exp_seqs[2], self.exp_seqs[1]]
+        exp_seqs = [self.input_sequences_list[2], self.input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_97_percent_clustering_feature4_most_abundant(self):
@@ -168,7 +169,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.exp_seqs[3], self.exp_seqs[1]]
+        exp_seqs = [self.input_sequences_list[3], self.input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_1_percent_clustering(self):
@@ -188,7 +189,7 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.exp_seqs[0]]
+        exp_seqs = [self.input_sequences_list[0]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_extra_features_in_sequences(self):
@@ -251,7 +252,7 @@ class ClusterFeaturesClosedReference(TestPluginBase):
                                       ['feature1', 'feature2', 'feature3',
                                        'feature4'],
                                       ['sample1', 'sample2', 'sample3'])
-        self.exp_seqs = _read_seqs(self.input_sequences)
+        self.input_sequences_list = _read_seqs(self.input_sequences)
 
     def test_100_percent_clustering(self):
         exp_table = biom.Table(np.array([[100, 101, 103],
@@ -272,13 +273,15 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[3]]
         exp_matched_seqs[0].metadata['id'] = 'r1'
         exp_matched_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.exp_seqs[2], self.exp_seqs[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[2],
+                              self.input_sequences_list[1]]
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_100_percent_clustering_strand(self):
@@ -300,13 +303,15 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[3]]
         exp_matched_seqs[0].metadata['id'] = 'r1'
         exp_matched_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.exp_seqs[2], self.exp_seqs[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[2],
+                              self.input_sequences_list[1]]
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_no_matches(self):
@@ -337,13 +342,14 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[3]]
         exp_matched_seqs[0].metadata['id'] = 'r1'
         exp_matched_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.exp_seqs[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[1]]
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_97_percent_clustering(self):
@@ -365,13 +371,14 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[3]]
         exp_matched_seqs[0].metadata['id'] = 'r1'
         exp_matched_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.exp_seqs[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[1]]
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_1_percent_clustering(self):
@@ -393,7 +400,8 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[3]]
         exp_matched_seqs[0].metadata['id'] = 'r1'
         exp_matched_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
@@ -470,7 +478,8 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[1], self.exp_seqs[2]]
+        exp_matched_seqs = [self.input_sequences_list[1],
+                            self.input_sequences_list[2]]
         exp_matched_seqs[0].metadata['id'] = 'r2'
         exp_matched_seqs[1].metadata['id'] = 'r1'
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
@@ -509,7 +518,8 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[1]]
+        exp_matched_seqs = [self.input_sequences_list[0],
+                            self.input_sequences_list[1]]
         exp_matched_seqs[0].metadata['id'] = 'r1'  # r1 -> feature1
         exp_matched_seqs[1].metadata['id'] = 'r2'  # r2 -> feature2
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
@@ -544,7 +554,7 @@ class ClusterFeaturesOpenReference(TestPluginBase):
                                  ['sample1', 'sample2', 'sample3'])
         self.input_table = Artifact.import_data('FeatureTable[Frequency]',
                                                 input_table)
-        self.exp_seqs = _read_seqs(self.input_sequences)
+        self.input_sequences_list = _read_seqs(self.input_sequences)
 
     def test_100_percent_clustering(self):
         exp_table = biom.Table(np.array([[100, 101, 103],
@@ -567,16 +577,18 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.exp_seqs[1], self.exp_seqs[2], self.exp_seqs[0],
-                        self.exp_seqs[3]]
+        exp_rep_seqs = [self.input_sequences_list[1],
+                        self.input_sequences_list[2],
+                        self.input_sequences_list[0],
+                        self.input_sequences_list[3]]
         exp_rep_seqs[2].metadata['id'] = 'r1'
         exp_rep_seqs[3].metadata['id'] = 'r2'
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
-        exp_ref_seqs = [self.exp_seqs[1], self.exp_seqs[2], ref_seqs[0],
-                        ref_seqs[1]]
+        exp_ref_seqs = [self.input_sequences_list[1],
+                        self.input_sequences_list[2], ref_seqs[0], ref_seqs[1]]
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_97_percent_clustering(self):
@@ -599,14 +611,16 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.exp_seqs[1], self.exp_seqs[0], self.exp_seqs[3]]
+        exp_rep_seqs = [self.input_sequences_list[1],
+                        self.input_sequences_list[0],
+                        self.input_sequences_list[3]]
         exp_rep_seqs[1].metadata['id'] = 'r1'
         exp_rep_seqs[2].metadata['id'] = 'r2'
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
-        exp_ref_seqs = [self.exp_seqs[1], ref_seqs[0], ref_seqs[1]]
+        exp_ref_seqs = [self.input_sequences_list[1], ref_seqs[0], ref_seqs[1]]
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_skip_denovo(self):
@@ -627,7 +641,8 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.exp_seqs[0], self.exp_seqs[3]]
+        exp_rep_seqs = [self.input_sequences_list[0],
+                        self.input_sequences_list[3]]
         exp_rep_seqs[0].metadata['id'] = 'r1'
         exp_rep_seqs[1].metadata['id'] = 'r2'
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
