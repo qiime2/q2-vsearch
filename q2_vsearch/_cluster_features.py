@@ -47,6 +47,10 @@ def _uc_to_sqlite(uc):
     # The PK constraint ensures that there are no duplicate Feature IDs
     c.execute('CREATE TABLE feature_cluster_map (feature_id TEXT PRIMARY KEY,'
               'cluster_id TEXT NOT NULL, count INTEGER);')
+    # This index is to help out the LEFT OUTER JOIN below, when grouping
+    # clusters to find their representative sequence.
+    c.execute('CREATE INDEX speed_racer ON '
+              'feature_cluster_map(cluster_id, count);')
     conn.commit()
     insert_stmt = 'INSERT INTO feature_cluster_map VALUES (?, ?, ?);'
 
@@ -117,17 +121,22 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     # -----------|------------------
     # r1         | ACGTACGTACGTACGT
     # r2         | AAAAAAAAAAAAAAAA
-    c.execute('''SELECT fcm.cluster_id, rs.sequence_string
-                   FROM (
-                          SELECT cluster_id, MAX(count) AS count
-                            FROM feature_cluster_map
-                        GROUP BY cluster_id
+    c.execute('''SELECT fcm1.cluster_id, rs.sequence_string
+                   FROM feature_cluster_map fcm1
+        LEFT OUTER JOIN feature_cluster_map fcm2
+                     ON fcm2.cluster_id = fcm1.cluster_id
+                    AND (
+                         fcm2.count > fcm1.count OR
+                         (
+                          -- If the counts are the same, break the tie using
+                          -- the first alphabetically sorted feature_id
+                          fcm2.count = fcm1.count AND
+                          fcm2.feature_id < fcm1.feature_id
+                         )
                         )
-                          AS g
-             INNER JOIN feature_cluster_map fcm
-                  USING(cluster_id, count)
-             INNER JOIN rep_seqs rs
-                  USING(feature_id);''')
+             INNER JOIN rep_seqs rs USING(feature_id)
+                  WHERE fcm2.count IS NULL;
+    ''')
     with open(output_fasta_fp, 'w') as output_seqs:
         for (id_, seq) in c.fetchall():
             output_seqs.write('>%s\n%s\n' % (id_, seq))
