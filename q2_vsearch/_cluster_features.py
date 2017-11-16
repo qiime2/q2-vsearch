@@ -76,7 +76,8 @@ def _uc_to_sqlite(uc):
 
 def _collapse_f_from_sqlite(conn):
     c = conn.cursor()
-    # This query produces the following results:
+    # This query produces the following results (displayed below with dummy
+    # data):
     # feature_id | cluster_id
     # -----------|------------
     # feature1   | r1
@@ -100,8 +101,8 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     input_seqs = skbio.read(input_fasta_fp, format='fasta',
                             constructor=skbio.DNA)
     c = conn.cursor()
-    # Create a second in-memory table with the following schema (including
-    # dummy data):
+    # Create a second in-memory table with the following schema (displayed
+    # below with dummy data):
     # feature_id | sequence_string
     # -----------|------------------
     # feature1   | ACGTACGTACGTACGT
@@ -115,8 +116,8 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
         c.execute('INSERT INTO rep_seqs VALUES (?, ?);', (seq.metadata['id'],
                                                           str(seq)))
     conn.commit()
-    # The results from this query should look like the following (including
-    # dummy data):
+    # The results from this query should look like the following (displayed
+    # below with dummy data):
     # cluster_id | sequence_string
     # -----------|------------------
     # r1         | ACGTACGTACGTACGT
@@ -171,7 +172,7 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
 
 def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                              perc_identity: float, threads: int=1
-                             )-> (biom.Table, DNAFASTAFormat):
+                             ) -> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
         with tempfile.NamedTemporaryFile() as out_uc:
@@ -225,8 +226,8 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                                       perc_identity: float,
                                       strand: str ='plus',
                                       threads: int=1
-                                      )-> (biom.Table, DNAFASTAFormat,
-                                           DNAFASTAFormat):
+                                      ) -> (biom.Table, DNAFASTAFormat,
+                                            DNAFASTAFormat):
 
     table_ids = set(table.ids(axis='observation'))
     sequence_ids = {e.metadata['id'] for e in skbio.io.read(
@@ -250,8 +251,9 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
         run_command(cmd)
         out_uc.seek(0)
 
-        tmp_unmatched_seqs.seek(0, os.SEEK_END)
-        if tmp_unmatched_seqs.tell() > 0:
+        # It is possible for there to be no unmatched sequences --- if that
+        # is the case, skip thie following clean-up.
+        if os.path.getsize(tmp_unmatched_seqs.name) > 0:
             # We don't really need to sort the matched sequences, this
             # is just to let us use --xsize, which strips the counts from
             # the Feature ID. It would be more ideal if --usearch_global,

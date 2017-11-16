@@ -36,6 +36,11 @@ def _read_seqs(seqs):
     return list(read_seqs)
 
 
+def _relabel_seqs(seqs, labels):
+    for i in range(len(seqs)):
+        seqs[i].metadata['id'] = labels[i]
+
+
 class ClusterFeaturesDenovoTests(TestPluginBase):
 
     package = 'q2_vsearch.tests'
@@ -255,6 +260,7 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.input_sequences_list = _read_seqs(self.input_sequences)
 
     def test_100_percent_clustering(self):
+        # feature2 and feature3 don't cluster
         exp_table = biom.Table(np.array([[100, 101, 103],
                                          [7, 8, 9]]),
                                ['r1', 'r2'],
@@ -273,18 +279,21 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[3]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'
-        exp_matched_seqs[1].metadata['id'] = 'r2'
+        # The rep seqs selected are feature1 and feature4, for r1 and r2,
+        # respectively. Since no other features are in the cluster, there is
+        # no count-based selection of the rep seq.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.input_sequences_list[2],
-                              self.input_sequences_list[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[2],  # feature3
+                              self.input_sequences_list[1]]  # feature2
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_100_percent_clustering_strand(self):
+        # feature2 and feature3 don't cluster
         exp_table = biom.Table(np.array([[100, 101, 103],
                                          [7, 8, 9]]),
                                ['r1', 'r2'],
@@ -303,15 +312,17 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[3]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'
-        exp_matched_seqs[1].metadata['id'] = 'r2'
+        # The rep seqs selected are feature1 and feature4, for r1 and r2,
+        # respectively. Since no other features are in the cluster, there is
+        # no count-based selection of the rep seq.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.input_sequences_list[2],
-                              self.input_sequences_list[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[2],  # feature3
+                              self.input_sequences_list[1]]  # feature2
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_no_matches(self):
@@ -324,6 +335,8 @@ class ClusterFeaturesClosedReference(TestPluginBase):
                 reference_sequences=self.ref_sequences_2, perc_identity=1.0)
 
     def test_99_percent_clustering(self):
+        # feature1 and feature3 cluster together; feature2 doesn't cluster at
+        # all; feature4 clusters alone.
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [7, 8, 9]]),
                                ['r1', 'r2'],
@@ -342,17 +355,21 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[3]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'
-        exp_matched_seqs[1].metadata['id'] = 'r2'
+        # The rep seqs selected are feature1 and feature4, for r1 and r2,
+        # respectively. feature1 and feature3 are in the same cluster, but
+        # feature1 is selected as the rep seq because it has a higher count.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.input_sequences_list[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[1]]  # feature2
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_97_percent_clustering(self):
+        # feature1 and feature3 cluster together; feature2 doesn't cluster at
+        # all; feature 4 clusters alone.
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [7, 8, 9]]),
                                ['r1', 'r2'],
@@ -371,17 +388,21 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[3]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'
-        exp_matched_seqs[1].metadata['id'] = 'r2'
+        # The rep seqs selected are feature1 and feature4, for r1 and r2,
+        # respectively. feature1 and feature3 are in the same cluster, but
+        # feature1 is selected as the rep seq because it has a higher count.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         obs_unmatched_seqs = _read_seqs(unmatched_seqs)
-        exp_unmatched_seqs = [self.input_sequences_list[1]]
+        exp_unmatched_seqs = [self.input_sequences_list[1]]  # feature2
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_1_percent_clustering(self):
+        # feature1 and feature3 cluster together; feature2 and feature4
+        # cluster together;
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [8, 9, 11]]),
                                ['r1', 'r2'],
@@ -400,10 +421,55 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[3]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'
-        exp_matched_seqs[1].metadata['id'] = 'r2'
+        # The rep seqs selected are feature1 and feature4, for r1 and r2,
+        # respectively. feature1 and feature3 are in the same cluster, but
+        # feature1 is selected as the rep seq because it has a higher count.
+        # Similarly, feature4 is selected as the cluster rep seq  because it
+        # has a higher count.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
+        self.assertEqual(obs_matched_seqs, exp_matched_seqs)
+
+        # all sequences matched, so unmatched seqs is empty
+        self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
+
+    def test_1_percent_clustering_alt_abundances(self):
+        # feature1 and feature3 cluster together; feature2 and feature4
+        # cluster together;
+        input_table = biom.Table(np.array([[4, 5, 6],
+                                           [7, 8, 9],
+                                           [100, 101, 103],
+                                           [1, 1, 2]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[104, 106, 109],
+                                         [8, 9, 11]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, matched_seqs, unmatched_seqs = \
+                    cluster_features_closed_reference(
+                        sequences=self.input_sequences, table=input_table,
+                        reference_sequences=self.ref_sequences_1,
+                        perc_identity=0.01)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_matched_seqs = _read_seqs(matched_seqs)
+        # The rep seqs selected are feature3 and feature2, for r1 and r2,
+        # respectively. feature1 and feature3 are in the same cluster, but
+        # feature3 is selected as the rep seq because it has a higher count.
+        # Similarly, feature2 is selected as the cluster rep seq  because it
+        # has a higher count.
+        exp_matched_seqs = [self.input_sequences_list[1],  # feature2
+                            self.input_sequences_list[2]]  # feature3
+        _relabel_seqs(exp_matched_seqs, ['r2', 'r1'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         # all sequences matched, so unmatched seqs is empty
@@ -449,44 +515,6 @@ class ClusterFeaturesClosedReference(TestPluginBase):
                 sequences=self.input_sequences, table=input_table,
                 reference_sequences=self.ref_sequences_1, perc_identity=1.0)
 
-    def test_highest_count_clustering(self):
-        # This test is the same as `test_1_percent_clustering`, except the
-        # observed counts are inverted (relative to the other features)
-        # which should create new rep_seq sequence strings.
-        input_table = biom.Table(np.array([[4, 5, 6],
-                                           [7, 8, 9],
-                                           [100, 101, 103],
-                                           [1, 1, 2]]),
-                                 ['feature1', 'feature2', 'feature3',
-                                  'feature4'],
-                                 ['sample1', 'sample2', 'sample3'])
-        exp_table = biom.Table(np.array([[104, 106, 109],
-                                         [8, 9, 11]]),
-                               ['r1', 'r2'],
-                               ['sample1', 'sample2', 'sample3'])
-
-        with redirected_stdio(stderr=os.devnull):
-            obs_table, matched_seqs, unmatched_seqs = \
-                    cluster_features_closed_reference(
-                        sequences=self.input_sequences, table=input_table,
-                        reference_sequences=self.ref_sequences_1,
-                        perc_identity=0.01)
-        # order of identifiers is important for biom.Table equality
-        obs_table = \
-            obs_table.sort_order(exp_table.ids(axis='observation'),
-                                 axis='observation')
-        self.assertEqual(obs_table, exp_table)
-
-        obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[1],
-                            self.input_sequences_list[2]]
-        exp_matched_seqs[0].metadata['id'] = 'r2'
-        exp_matched_seqs[1].metadata['id'] = 'r1'
-        self.assertEqual(obs_matched_seqs, exp_matched_seqs)
-
-        # all sequences matched, so unmatched seqs is empty
-        self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
-
     def test_features_with_same_counts(self):
         # feature1 and feature3 cluster into r1, feature2 and feature4 cluster
         # into r2. The features within a cluster have the same count, so this
@@ -518,10 +546,15 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_matched_seqs = _read_seqs(matched_seqs)
-        exp_matched_seqs = [self.input_sequences_list[0],
-                            self.input_sequences_list[1]]
-        exp_matched_seqs[0].metadata['id'] = 'r1'  # r1 -> feature1
-        exp_matched_seqs[1].metadata['id'] = 'r2'  # r2 -> feature2
+        # The rep seqs selected are feature1 and feature2, for r1 and r2,
+        # respectively. feature1 and feature3 are in the same cluster, but
+        # feature1 is selected as the rep seq because it comes first
+        # alphabetically, breaking the tie caused by the same counts.
+        # Similarly, feature2 is selected as the cluster rep seq  because it
+        # has a higher count.
+        exp_matched_seqs = [self.input_sequences_list[0],  # feature1
+                            self.input_sequences_list[1]]  # feature2
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         # all sequences matched, so unmatched seqs is empty
@@ -557,6 +590,9 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.input_sequences_list = _read_seqs(self.input_sequences)
 
     def test_100_percent_clustering(self):
+        # feature1 clusters into r1 and feature4 clusters into r4 during
+        # closed-ref clustering; feature2 and feature3 cluster into their own
+        # clusters during de-novo clustering.
         exp_table = biom.Table(np.array([[100, 101, 103],
                                          [1, 1, 2],
                                          [4, 5, 6],
@@ -577,21 +613,25 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.input_sequences_list[1],
-                        self.input_sequences_list[2],
-                        self.input_sequences_list[0],
-                        self.input_sequences_list[3]]
-        exp_rep_seqs[2].metadata['id'] = 'r1'
-        exp_rep_seqs[3].metadata['id'] = 'r2'
+        exp_rep_seqs = [self.input_sequences_list[1],  # feature2
+                        self.input_sequences_list[2],  # feature3
+                        self.input_sequences_list[0],  # feature1
+                        self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_rep_seqs, ['feature2', 'feature3', 'r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
-        exp_ref_seqs = [self.input_sequences_list[1],
-                        self.input_sequences_list[2], ref_seqs[0], ref_seqs[1]]
+        exp_ref_seqs = [self.input_sequences_list[1],  # feature2
+                        self.input_sequences_list[2],  # feature3
+                        ref_seqs[0],                   # r1
+                        ref_seqs[1]]                   # r2
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_97_percent_clustering(self):
+        # feature1 and feature3 clusters into r1 and feature4 clusters into r4
+        # during closed-ref clustering; feature2 clusters into its own cluster
+        # during de-novo clustering.
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [7, 8, 9],
                                          [1, 1, 2]]),
@@ -611,19 +651,23 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.input_sequences_list[1],
-                        self.input_sequences_list[0],
-                        self.input_sequences_list[3]]
-        exp_rep_seqs[1].metadata['id'] = 'r1'
-        exp_rep_seqs[2].metadata['id'] = 'r2'
+        exp_rep_seqs = [self.input_sequences_list[1],  # feature2
+                        self.input_sequences_list[0],  # feature1
+                        self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_rep_seqs, ['feature2', 'r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
-        exp_ref_seqs = [self.input_sequences_list[1], ref_seqs[0], ref_seqs[1]]
+        exp_ref_seqs = [self.input_sequences_list[1],  # feature2
+                        ref_seqs[0],                   # r1
+                        ref_seqs[1]]                   # r2
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_skip_denovo(self):
+        # feature1 and feature3 clusters into r1 and feature2 and feature4
+        # clusters into r2 during closed-ref clustering; no unclustered
+        # features so de-novo clustering is skipped.
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [8, 9, 11]]),
                                ['r1', 'r2'],
@@ -641,13 +685,14 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.input_sequences_list[0],
-                        self.input_sequences_list[3]]
-        exp_rep_seqs[0].metadata['id'] = 'r1'
-        exp_rep_seqs[1].metadata['id'] = 'r2'
+        exp_rep_seqs = [self.input_sequences_list[0],  # feature1
+                        self.input_sequences_list[3]]  # feature4
+        _relabel_seqs(exp_rep_seqs, ['r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
+        # The returned "new" ref seqs should be the same as the original ref
+        # seqs, because we skipped de-novo clustering.
         exp_ref_seqs = _read_seqs(self.ref_sequences)
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
@@ -690,6 +735,8 @@ class PrivateFunctionTests(TestPluginBase):
             self.assertEqual(str(obs_seqs[3]), str(input_seqs[3]))
 
     def test_fasta_from_sqlite(self):
+        # artificially clustering feature1 and feature3 into r1, and
+        # feature2 and feature4 into r2.
         conn = sqlite3.connect(':memory:')
         c = conn.cursor()
         c.execute('CREATE TABLE feature_cluster_map'
@@ -706,11 +753,14 @@ class PrivateFunctionTests(TestPluginBase):
 
             obs_seqs = _read_seqs(output_sequences_f.name)
         rep_seqs = _read_seqs(self.input_sequences)
-        rep_seqs[0].metadata['id'], rep_seqs[3].metadata['id'] = 'r1', 'r2'
-        exp_seqs = [rep_seqs[0], rep_seqs[3]]
+        exp_seqs = [rep_seqs[0],  # feature1
+                    rep_seqs[3]]  # feature4
+        _relabel_seqs(exp_seqs, ['r1', 'r2'])
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_fasta_from_sqlite_same_clusters_different_rep_seq(self):
+        # same as `test_fasta_from_sqlite`, but invert the selected rep seq
+        # in each cluster by swapping the feature counts in the test data.
         conn = sqlite3.connect(':memory:')
         c = conn.cursor()
         c.execute('CREATE TABLE feature_cluster_map'
@@ -727,8 +777,9 @@ class PrivateFunctionTests(TestPluginBase):
 
             obs_seqs = _read_seqs(output_sequences_f.name)
         rep_seqs = _read_seqs(self.input_sequences)
-        rep_seqs[2].metadata['id'], rep_seqs[1].metadata['id'] = 'r1', 'r2'
-        exp_seqs = [rep_seqs[1], rep_seqs[2]]
+        exp_seqs = [rep_seqs[1],  # feature2
+                    rep_seqs[2]]  # feature3
+        _relabel_seqs(exp_seqs, ['r2', 'r1'])
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_clusters_with_multiple_features_with_same_count(self):
@@ -753,7 +804,7 @@ class PrivateFunctionTests(TestPluginBase):
 
             obs_seqs = _read_seqs(output_sequences_f.name)
         rep_seqs = _read_seqs(self.input_sequences)
-        # r1 -> feature1            r2 -> feature2
-        rep_seqs[0].metadata['id'], rep_seqs[1].metadata['id'] = 'r1', 'r2'
-        exp_seqs = [rep_seqs[0], rep_seqs[1]]
+        exp_seqs = [rep_seqs[0],  # feature1
+                    rep_seqs[1]]  # feature2
+        _relabel_seqs(exp_seqs, ['r1', 'r2'])
         self.assertEqual(obs_seqs, exp_seqs)

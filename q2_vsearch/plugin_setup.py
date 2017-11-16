@@ -176,7 +176,11 @@ plugin.pipelines.register_function(
     output_descriptions={
         'clustered_table': 'The table following clustering of features.',
         'clustered_sequences': 'Sequences representing clustered features.',
-        'new_reference_sequences': 'The new reference sequences.',
+        'new_reference_sequences': 'The new reference sequences. This can be '
+                                   'used for subsequent runs of '
+                                   'open-reference clustering for consistent '
+                                   'definitions of features across '
+                                   'open-reference feature tables.',
     },
     name='Open-reference clustering of features.',
     description='Given a feature table and the associated feature sequences, '
@@ -191,10 +195,21 @@ plugin.pipelines.register_function(
                 'features in the input table are clustered into a single '
                 'feature, the frequency of that single feature in a given '
                 'sample is the sum of the frequencies of the features that '
-                'were clustered in that sample. Feature identifiers and '
-                'sequences will be inherited from the centroid feature '
-                'of each cluster. See the vsearch documentation for details '
-                'on how sequence clustering is performed.',
+                'were clustered in that sample. Feature identifiers will be '
+                'inherited from the centroid feature of each cluster. For '
+                'features that match a reference sequence, the centroid '
+                'feature is that reference sequence, so its identifier will '
+                'become the feature identifier. The clustered_sequences '
+                'result will contain feature representative sequences that '
+                'are derived from the sequences input for all features in '
+                'clustered_table. This will always be the most abundant '
+                'sequence in the cluster. The new_reference_sequences result '
+                'will contain the entire reference database, plus feature '
+                'representative sequences for any de novo features. This is '
+                'intended to be used as a reference database in subsequent '
+                'iterations of cluster_features_open_reference, if '
+                'applicable. See the vsearch documentation for details on how '
+                'sequence clustering is performed.',
 )
 
 plugin.methods.register_function(
