@@ -478,6 +478,45 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         # all sequences matched, so unmatched seqs is empty
         self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
 
+    def test_features_with_same_counts(self):
+        # feature1 and feature3 cluster into r1, feature2 and feature4 cluster
+        # into r2. The features within a cluster have the same count, so this
+        # test should ensure that the right rep seq is picked for each cluster.
+        # The query in _fasta_from_sqlite should break ties by using the
+        # first feature when sorting the tied features alphabetically by id.
+        input_table = biom.Table(np.array([[4, 5, 6],
+                                           [1, 2, 3],
+                                           [4, 6, 5],
+                                           [2, 1, 3]]),
+                                 ['feature1', 'feature2', 'feature3',
+                                  'feature4'],
+                                 ['sample1', 'sample2', 'sample3'])
+        exp_table = biom.Table(np.array([[8, 11, 11],
+                                         [3, 3, 6]]),
+                               ['r1', 'r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, matched_seqs, unmatched_seqs = \
+                    cluster_features_closed_reference(
+                        sequences=self.input_sequences, table=input_table,
+                        reference_sequences=self.ref_sequences_1,
+                        perc_identity=0.01)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_matched_seqs = _read_seqs(matched_seqs)
+        exp_matched_seqs = [self.exp_seqs[0], self.exp_seqs[1]]
+        exp_matched_seqs[0].metadata['id'] = 'r1'  # r1 -> feature1
+        exp_matched_seqs[1].metadata['id'] = 'r2'  # r2 -> feature2
+        self.assertEqual(obs_matched_seqs, exp_matched_seqs)
+
+        # all sequences matched, so unmatched seqs is empty
+        self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
+
 
 class ClusterFeaturesOpenReference(TestPluginBase):
 
@@ -656,7 +695,7 @@ class PrivateFunctionTests(TestPluginBase):
         exp_seqs = [rep_seqs[0], rep_seqs[3]]
         self.assertEqual(obs_seqs, exp_seqs)
 
-    def test_fasta_from_sqlite_reverse_centroids(self):
+    def test_fasta_from_sqlite_same_clusters_different_rep_seq(self):
         conn = sqlite3.connect(':memory:')
         c = conn.cursor()
         c.execute('CREATE TABLE feature_cluster_map'
@@ -675,4 +714,31 @@ class PrivateFunctionTests(TestPluginBase):
         rep_seqs = _read_seqs(self.input_sequences)
         rep_seqs[2].metadata['id'], rep_seqs[1].metadata['id'] = 'r1', 'r2'
         exp_seqs = [rep_seqs[1], rep_seqs[2]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_clusters_with_multiple_features_with_same_count(self):
+        # feature1 and feature3 cluster into r1, feature2 and feature4 cluster
+        # into r2. The features within a cluster have the same count, so this
+        # test should ensure that the right rep seq is picked for each cluster.
+        # The query in _fasta_from_sqlite should break ties by using the
+        # first feature when sorting the tied features alphabetically by id.
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('CREATE TABLE feature_cluster_map'
+                  '(feature_id TEXT PRIMARY KEY,cluster_id TEXT NOT NULL, '
+                  'count INTEGER);')
+        s = [('feature1', 'r1', 204), ('feature2', 'r2', 4),
+             ('feature3', 'r1', 204), ('feature4', 'r2', 4)]
+        c.executemany('INSERT INTO feature_cluster_map VALUES (?, ?, ?);', s)
+        conn.commit()
+
+        with tempfile.NamedTemporaryFile() as output_sequences_f:
+            _fasta_from_sqlite(conn, self.input_sequences_fp,
+                               output_sequences_f.name)
+
+            obs_seqs = _read_seqs(output_sequences_f.name)
+        rep_seqs = _read_seqs(self.input_sequences)
+        # r1 -> feature1            r2 -> feature2
+        rep_seqs[0].metadata['id'], rep_seqs[1].metadata['id'] = 'r1', 'r2'
+        exp_seqs = [rep_seqs[0], rep_seqs[1]]
         self.assertEqual(obs_seqs, exp_seqs)
