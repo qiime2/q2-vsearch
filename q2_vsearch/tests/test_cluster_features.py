@@ -329,11 +329,13 @@ class ClusterFeaturesClosedReference(TestPluginBase):
     def test_no_matches(self):
         with self.assertRaisesRegex(VSearchError,
                                     expected_regex='No matches were iden'):
-            # self.ref_sequences_2 are rev comps of self.ref_sequences_1,
-            # so if strand='both' is not passed, there should be no matches
-            cluster_features_closed_reference(
-                sequences=self.input_sequences, table=self.input_table,
-                reference_sequences=self.ref_sequences_2, perc_identity=1.0)
+            with redirected_stdio(stderr=os.devnull):
+                # self.ref_sequences_2 are rev comps of self.ref_sequences_1,
+                # so if strand='both' is not passed, there should be no matches
+                cluster_features_closed_reference(
+                    sequences=self.input_sequences, table=self.input_table,
+                    reference_sequences=self.ref_sequences_2,
+                    perc_identity=1.0)
 
     def test_99_percent_clustering(self):
         # feature1 and feature3 cluster together; feature2 doesn't cluster at
