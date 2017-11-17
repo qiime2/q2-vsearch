@@ -22,7 +22,8 @@ from q2_types.feature_data import DNAFASTAFormat, DNAIterator
 from q2_vsearch._cluster_features import (cluster_features_de_novo,
                                           cluster_features_closed_reference,
                                           _fasta_with_sizes,
-                                          _fasta_from_sqlite)
+                                          _fasta_from_sqlite,
+                                          VSearchError)
 
 
 def _read_seqs(seqs):
@@ -326,7 +327,7 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         self.assertEqual(obs_unmatched_seqs, exp_unmatched_seqs)
 
     def test_no_matches(self):
-        with self.assertRaisesRegex(ValueError,
+        with self.assertRaisesRegex(VSearchError,
                                     expected_regex='No matches were iden'):
             # self.ref_sequences_2 are rev comps of self.ref_sequences_1,
             # so if strand='both' is not passed, there should be no matches
@@ -570,7 +571,7 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.open_reference = \
             self.plugin.pipelines['cluster_features_open_reference']
 
-        input_sequences_fp = self.get_data_path('dna-sequences-1.fasta')
+        input_sequences_fp = self.get_data_path('dna-sequences-2.fasta')
         self.input_sequences = Artifact.import_data('FeatureData[Sequence]',
                                                     input_sequences_fp)
 
@@ -581,9 +582,10 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         input_table = biom.Table(np.array([[100, 101, 103],
                                            [1, 1, 2],
                                            [4, 5, 6],
-                                           [7, 8, 9]]),
+                                           [7, 8, 9],
+                                           [99, 98, 97]]),
                                  ['feature1', 'feature2', 'feature3',
-                                  'feature4'],
+                                  'feature4', 'feature5'],
                                  ['sample1', 'sample2', 'sample3'])
         self.input_table = Artifact.import_data('FeatureTable[Frequency]',
                                                 input_table)
@@ -591,13 +593,15 @@ class ClusterFeaturesOpenReference(TestPluginBase):
 
     def test_100_percent_clustering(self):
         # feature1 clusters into r1 and feature4 clusters into r4 during
-        # closed-ref clustering; feature2 and feature3 cluster into their own
-        # clusters during de-novo clustering.
+        # closed-ref clustering; feature2, feature3, and feature5 cluster into
+        # their own clusters during de-novo clustering.
         exp_table = biom.Table(np.array([[100, 101, 103],
                                          [1, 1, 2],
                                          [4, 5, 6],
-                                         [7, 8, 9]]),
-                               ['r1', 'feature2', 'feature3', 'r2'],
+                                         [7, 8, 9],
+                                         [99, 98, 97]]),
+                               ['r1', 'feature2', 'feature3', 'r2',
+                                'feature5'],
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
@@ -606,6 +610,10 @@ class ClusterFeaturesOpenReference(TestPluginBase):
                 reference_sequences=self.ref_sequences, perc_identity=1.0)
 
         obs_table = obs_table.view(biom.Table)
+        obs_table_ids = set(obs_table.ids(axis='observation'))
+        exp_table_ids = set(exp_table.ids(axis='observation'))
+        self.assertEqual(obs_table_ids, exp_table_ids)
+
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -615,27 +623,29 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         obs_rep_seqs = _read_seqs(rep_seqs)
         exp_rep_seqs = [self.input_sequences_list[1],  # feature2
                         self.input_sequences_list[2],  # feature3
+                        self.input_sequences_list[4],  # feature5
                         self.input_sequences_list[0],  # feature1
                         self.input_sequences_list[3]]  # feature4
-        _relabel_seqs(exp_rep_seqs, ['feature2', 'feature3', 'r1', 'r2'])
+        _relabel_seqs(exp_rep_seqs, ['feature2', 'feature3', 'feature5',
+                                     'r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
         exp_ref_seqs = [self.input_sequences_list[1],  # feature2
-                        self.input_sequences_list[2],  # feature3
-                        ref_seqs[0],                   # r1
-                        ref_seqs[1]]                   # r2
+                        self.input_sequences_list[2],
+                        self.input_sequences_list[4]]  # feature3
+        exp_ref_seqs = exp_ref_seqs + ref_seqs  # r1, r2
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_97_percent_clustering(self):
         # feature1 and feature3 clusters into r1 and feature4 clusters into r4
-        # during closed-ref clustering; feature2 clusters into its own cluster
-        # during de-novo clustering.
+        # during closed-ref clustering; feature2 and feature5 clusters into a
+        # cluster during de-novo clustering.
         exp_table = biom.Table(np.array([[104, 106, 109],
                                          [7, 8, 9],
-                                         [1, 1, 2]]),
-                               ['r1', 'r2', 'feature2'],
+                                         [100, 99, 99]]),
+                               ['r1', 'r2', 'feature5'],
                                ['sample1', 'sample2', 'sample3'])
 
         with redirected_stdio(stderr=os.devnull):
@@ -644,6 +654,10 @@ class ClusterFeaturesOpenReference(TestPluginBase):
                 reference_sequences=self.ref_sequences, perc_identity=0.97)
 
         obs_table = obs_table.view(biom.Table)
+        obs_table_ids = set(obs_table.ids(axis='observation'))
+        exp_table_ids = set(exp_table.ids(axis='observation'))
+        self.assertEqual(obs_table_ids, exp_table_ids)
+
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -651,17 +665,16 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_table, exp_table)
 
         obs_rep_seqs = _read_seqs(rep_seqs)
-        exp_rep_seqs = [self.input_sequences_list[1],  # feature2
+        exp_rep_seqs = [self.input_sequences_list[4],  # feature5
                         self.input_sequences_list[0],  # feature1
                         self.input_sequences_list[3]]  # feature4
-        _relabel_seqs(exp_rep_seqs, ['feature2', 'r1', 'r2'])
+        _relabel_seqs(exp_rep_seqs, ['feature5', 'r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
         ref_seqs = _read_seqs(self.ref_sequences)
-        exp_ref_seqs = [self.input_sequences_list[1],  # feature2
-                        ref_seqs[0],                   # r1
-                        ref_seqs[1]]                   # r2
+        exp_ref_seqs = [self.input_sequences_list[4]]  # feature5
+        exp_ref_seqs = exp_ref_seqs + ref_seqs  # r1, r2
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_skip_denovo(self):
@@ -669,7 +682,7 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         # clusters into r2 during closed-ref clustering; no unclustered
         # features so de-novo clustering is skipped.
         exp_table = biom.Table(np.array([[104, 106, 109],
-                                         [8, 9, 11]]),
+                                         [107, 107, 108]]),
                                ['r1', 'r2'],
                                ['sample1', 'sample2', 'sample3'])
         with redirected_stdio(stderr=os.devnull):
@@ -678,6 +691,10 @@ class ClusterFeaturesOpenReference(TestPluginBase):
                 reference_sequences=self.ref_sequences, perc_identity=0.01)
 
         obs_table = obs_table.view(biom.Table)
+        obs_table_ids = set(obs_table.ids(axis='observation'))
+        exp_table_ids = set(exp_table.ids(axis='observation'))
+        self.assertEqual(obs_table_ids, exp_table_ids)
+
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
@@ -686,7 +703,7 @@ class ClusterFeaturesOpenReference(TestPluginBase):
 
         obs_rep_seqs = _read_seqs(rep_seqs)
         exp_rep_seqs = [self.input_sequences_list[0],  # feature1
-                        self.input_sequences_list[3]]  # feature4
+                        self.input_sequences_list[4]]  # feature5
         _relabel_seqs(exp_rep_seqs, ['r1', 'r2'])
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
@@ -694,6 +711,57 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         # The returned "new" ref seqs should be the same as the original ref
         # seqs, because we skipped de-novo clustering.
         exp_ref_seqs = _read_seqs(self.ref_sequences)
+        self.assertEqual(obs_ref_seqs, exp_ref_seqs)
+
+    def test_skip_closed_reference(self):
+        # feature1 and feature3 clusters into r1 and feature2 and feature4
+        # clusters into r2 during closed-ref clustering; no unclustered
+        # features so de-novo clustering is skipped.
+
+        exp_table = biom.Table(np.array([[100, 101, 103],
+                                         [1, 1, 2],
+                                         [4, 5, 6],
+                                         [7, 8, 9],
+                                         [99, 98, 97]]),
+                               ['feature1', 'feature2', 'feature3',
+                                'feature4', 'feature5'],
+                               ['sample1', 'sample2', 'sample3'])
+        ref_sequences_fp = self.get_data_path('ref-sequences-2.fasta')
+        ref_sequences = Artifact.import_data('FeatureData[Sequence]',
+                                             ref_sequences_fp)
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, rep_seqs, new_ref_seqs = self.open_reference(
+                sequences=self.input_sequences, table=self.input_table,
+                reference_sequences=ref_sequences, perc_identity=1.0)
+
+        obs_table = obs_table.view(biom.Table)
+        obs_table_ids = set(obs_table.ids(axis='observation'))
+        exp_table_ids = set(exp_table.ids(axis='observation'))
+        self.assertEqual(obs_table_ids, exp_table_ids)
+
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, exp_table)
+
+        obs_rep_seqs = _read_seqs(rep_seqs)
+        exp_rep_seqs = [self.input_sequences_list[0],  # feature1
+                        self.input_sequences_list[4],  # feature5
+                        self.input_sequences_list[3],  # feature4
+                        self.input_sequences_list[2],  # feature3
+                        self.input_sequences_list[1]]  # feature2
+        self.assertEqual(obs_rep_seqs, exp_rep_seqs)
+
+        obs_ref_seqs = _read_seqs(new_ref_seqs)
+        # The returned "new" ref seqs should be the same as the original rep
+        # seqs, because we skipped closed-reference clustering.
+        exp_ref_seqs = [self.input_sequences_list[0],  # feature1
+                        self.input_sequences_list[4],  # feature5
+                        self.input_sequences_list[3],  # feature4
+                        self.input_sequences_list[2],  # feature3
+                        self.input_sequences_list[1]]  # feature2
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
 
