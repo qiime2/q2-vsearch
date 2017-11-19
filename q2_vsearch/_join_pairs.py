@@ -8,6 +8,7 @@
 
 import os.path
 import yaml
+from typing import List
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
@@ -55,7 +56,7 @@ def _join_pairs_w_command_output(
         qminout: int=0,
         qmax: int=41,
         qmaxout: int=41,
-        ) -> SingleLanePerSampleSingleEndFastqDirFmt:
+        ) -> (List[str], SingleLanePerSampleSingleEndFastqDirFmt):
     # this function exists only to simplify unit testing
 
     result = SingleLanePerSampleSingleEndFastqDirFmt()
