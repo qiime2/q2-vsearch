@@ -328,7 +328,7 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
 
     # It is possible that all of the sequences matched the reference database,
     # if that is the case, don't worry about running cluster_features_de_novo.
-    if unmatched_seqs.view(pd.Series).size:
+    if unmatched_seqs.view(pd.Series).size > 0:
         unmatched_seqs_md = Metadata.from_artifact(unmatched_seqs)
         unmatched_table, = filter_features(table=table,
                                            metadata=unmatched_seqs_md)
@@ -338,7 +338,9 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
             perc_identity=perc_identity, threads=threads)
 
         if skipped_closed_ref:
-            outputs = (de_novo_table, de_novo_seqs, de_novo_seqs)
+            merged_reference_seqs, = merge_seq_data(data1=reference_sequences,
+                                                    data2=de_novo_seqs)
+            outputs = (de_novo_table, de_novo_seqs, merged_reference_seqs)
         else:
             merged_table, = merge(
                 table1=closed_ref_table, table2=de_novo_table,

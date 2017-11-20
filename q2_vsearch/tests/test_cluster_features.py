@@ -757,13 +757,10 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_rep_seqs, exp_rep_seqs)
 
         obs_ref_seqs = _read_seqs(new_ref_seqs)
-        # The returned "new" ref seqs should be the same as the original rep
-        # seqs, because we skipped closed-reference clustering.
-        exp_ref_seqs = [self.input_sequences_list[0],  # feature1
-                        self.input_sequences_list[4],  # feature5
-                        self.input_sequences_list[3],  # feature4
-                        self.input_sequences_list[2],  # feature3
-                        self.input_sequences_list[1]]  # feature2
+        # The returned "new" ref seqs should be the same as the original ref
+        # seqs, plus the original rep seqs (since de-novo clustering happened
+        # at 100% identity).
+        exp_ref_seqs = self.input_sequences_list + _read_seqs(ref_sequences)
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
 
