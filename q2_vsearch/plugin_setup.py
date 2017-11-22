@@ -15,7 +15,8 @@ from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 from q2_types.sample_data import SampleData
 from q2_types.per_sample_sequences import (
-    Sequences, PairedEndSequencesWithQuality, JoinedSequencesWithQuality)
+    Sequences, SequencesWithQuality, PairedEndSequencesWithQuality,
+    JoinedSequencesWithQuality)
 
 plugin = qiime2.plugin.Plugin(
     name='vsearch',
@@ -215,7 +216,9 @@ plugin.pipelines.register_function(
 plugin.methods.register_function(
     function=q2_vsearch._cluster_sequences.dereplicate_sequences,
     inputs={
-        'sequences': SampleData[Sequences]
+        'sequences': (SampleData[Sequences] |
+                      SampleData[SequencesWithQuality] |
+                      SampleData[JoinedSequencesWithQuality])
     },
     parameters={},
     outputs=[
