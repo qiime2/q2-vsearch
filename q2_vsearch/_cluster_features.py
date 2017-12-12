@@ -307,7 +307,7 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
     cluster_features_de_novo = ctx.get_action(
         'vsearch', 'cluster_features_de_novo')
     merge = ctx.get_action('feature_table', 'merge')
-    merge_seq_data = ctx.get_action('feature_table', 'merge_seq_data')
+    merge_seqs = ctx.get_action('feature_table', 'merge_seqs')
 
     skipped_closed_ref = True
     try:
@@ -338,19 +338,18 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
             perc_identity=perc_identity, threads=threads)
 
         if skipped_closed_ref:
-            merged_reference_seqs, = merge_seq_data(data1=reference_sequences,
-                                                    data2=de_novo_seqs)
+            merged_reference_seqs, = merge_seqs(data=[reference_sequences,
+                                                      de_novo_seqs])
             outputs = (de_novo_table, de_novo_seqs, merged_reference_seqs)
         else:
             merged_table, = merge(
-                table1=closed_ref_table, table2=de_novo_table,
+                tables=[closed_ref_table, de_novo_table],
                 overlap_method='error_on_overlapping_feature')
 
-            merged_rep_seqs, = merge_seq_data(data1=rep_seqs,
-                                              data2=de_novo_seqs)
+            merged_rep_seqs, = merge_seqs(data=[rep_seqs, de_novo_seqs])
 
-            merged_reference_seqs, = merge_seq_data(data1=reference_sequences,
-                                                    data2=de_novo_seqs)
+            merged_reference_seqs, = merge_seqs(data=[reference_sequences,
+                                                      de_novo_seqs])
             outputs = (merged_table, merged_rep_seqs, merged_reference_seqs)
     else:  # skipped de novo
         outputs = (closed_ref_table, rep_seqs, reference_sequences)
