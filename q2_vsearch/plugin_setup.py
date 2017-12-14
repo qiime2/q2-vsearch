@@ -6,11 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime2.plugin
+import importlib
 
+import qiime2.plugin
 import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
 import q2_vsearch._join_pairs
+import q2_vsearch._chimera
+from q2_vsearch._type import UchimeStats
+from q2_vsearch._format import UchimeStatsFmt, UchimeStatsDirFmt
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 from q2_types.sample_data import SampleData
@@ -32,6 +36,13 @@ plugin = qiime2.plugin.Plugin(
                    "VSEARCH: a versatile open source tool for metagenomics. "
                    "PeerJ 4:e2584. doi: 10.7717/peerj.2584")
 )
+
+plugin.register_formats(UchimeStatsFmt, UchimeStatsDirFmt)
+
+plugin.register_semantic_types(UchimeStats)
+plugin.register_semantic_type_to_format(
+    UchimeStats,
+    artifact_format=UchimeStatsDirFmt)
 
 plugin.methods.register_function(
     function=q2_vsearch._cluster_features.cluster_features_de_novo,
@@ -307,3 +318,105 @@ plugin.methods.register_function(
                  'performed, and for more information on the parameters to '
                  'this method.')
 )
+
+plugin.methods.register_function(
+    function=q2_vsearch._chimera.uchime_ref,
+    inputs={
+        'sequences': FeatureData[Sequence],
+        'table': FeatureTable[Frequency],
+        'reference_sequences': FeatureData[Sequence]},
+    parameters={
+        'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'mindiffs': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
+        'mindiv': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'minh': qiime2.plugin.Float % qiime2.plugin.Range(
+                          0., 1.0, inclusive_end=True),
+        'xn': qiime2.plugin.Float % qiime2.plugin.Range(
+                          1., None, inclusive_start=False),
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                          0, 256, inclusive_start=True, inclusive_end=True)
+    },
+    outputs=[
+        ('chimeras', FeatureData[Sequence]),
+        ('nonchimeras', FeatureData[Sequence]),
+        ('stats', UchimeStats)
+    ],
+    input_descriptions={
+        'sequences': 'The feature sequences to be chimera-checked.',
+        'table': ('Feature table (used for computing total feature '
+                  'abundances).'),
+        'reference_sequences': 'The non-chimeric reference sequences.'
+    },
+    parameter_descriptions={
+        'dn': ('No vote pseudo-count, corresponding to the parameter n in '
+               'the chimera scoring function.'),
+        'mindiffs': 'Minimum number of differences per segment.',
+        'mindiv': 'Minimum divergence from closest parent.',
+        'minh': ('Minimum score (h). Increasing this value tends to reduce '
+                 'the number of false positives and to decrease sensitivity.'),
+        'xn': ('No vote weight, corresponding to the parameter beta in the '
+               'scoring function.'),
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
+    },
+    output_descriptions={
+        'chimeras': 'The chimeric sequences.',
+        'nonchimeras': 'The non-chimeric sequences.',
+        'stats': 'Summary statistics from chimera checking.'
+    },
+    name='Reference-based chimera filtering with vsearch.',
+    description=('Apply the vsearch uchime_ref method to identify chimeric '
+                 'feature sequences. The results of this method can be used '
+                 'to filter chimeric features from the corresponding feature '
+                 'table. For additional details, please refer to the vsearch '
+                 'documentation.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._chimera.uchime_denovo,
+    inputs={
+        'sequences': FeatureData[Sequence],
+        'table': FeatureTable[Frequency]},
+    parameters={
+        'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'mindiffs': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
+        'mindiv': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'minh': qiime2.plugin.Float % qiime2.plugin.Range(
+                          0., 1.0, inclusive_end=True),
+        'xn': qiime2.plugin.Float % qiime2.plugin.Range(
+                          1., None, inclusive_start=False)
+    },
+    outputs=[
+        ('chimeras', FeatureData[Sequence]),
+        ('nonchimeras', FeatureData[Sequence]),
+        ('stats', UchimeStats)
+    ],
+    input_descriptions={
+        'sequences': 'The feature sequences to be chimera-checked.',
+        'table': ('Feature table (used for computing total feature '
+                  'abundances).'),
+    },
+    parameter_descriptions={
+        'dn': ('No vote pseudo-count, corresponding to the parameter n in '
+               'the chimera scoring function.'),
+        'mindiffs': 'Minimum number of differences per segment.',
+        'mindiv': 'Minimum divergence from closest parent.',
+        'minh': ('Minimum score (h). Increasing this value tends to reduce '
+                 'the number of false positives and to decrease sensitivity.'),
+        'xn': ('No vote weight, corresponding to the parameter beta in the '
+               'scoring function.'),
+    },
+    output_descriptions={
+        'chimeras': 'The chimeric sequences.',
+        'nonchimeras': 'The non-chimeric sequences.',
+        'stats': 'Summary statistics from chimera checking.'
+    },
+    name='De novo chimera filtering with vsearch.',
+    description=('Apply the vsearch uchime_denovo method to identify chimeric '
+                 'feature sequences. The results of this method can be used '
+                 'to filter chimeric features from the corresponding feature '
+                 'table. For additional details, please refer to the vsearch '
+                 'documentation.')
+)
+
+importlib.import_module('q2_vsearch._transformer')
