@@ -11,8 +11,8 @@ import qiime2.plugin.model as model
 
 class UchimeStatsFmt(model.TextFileFormat):
     def sniff(self):
-        line = open(str(self)).readline()
-        header = line.strip().split('\t')
+        with open(str(self)) as fh:
+            header = fh.readline().strip().split('\t')
 
         return len(header) == 18
 
