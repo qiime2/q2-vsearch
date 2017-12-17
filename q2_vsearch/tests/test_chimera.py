@@ -44,11 +44,7 @@ class UchimeDenovoTests(TestPluginBase):
 
         obs_chime = _read_seqs(chime)
         exp_chime = [self.input_sequences_list[3]]
-        # The ids are not correct in the the chimeras file - I think
-        # this may be a vsearch bug:
-        # https://github.com/torognes/vsearch/issues/272
-        self.assertEqual(len(obs_chime), len(exp_chime))
-        # self.assertEqual(obs_chime, exp_chime)
+        self.assertEqual(obs_chime, exp_chime)
 
         # sequences are reverse-sorted by abundance in output
         obs_nonchime = _read_seqs(nonchime)
@@ -142,11 +138,7 @@ class UchimeRefTests(TestPluginBase):
 
         obs_chime = _read_seqs(chime)
         exp_chime = [self.input_sequences_list[3]]
-        # The ids are not correct in the the chimeras file - I think
-        # this may be a vsearch bug:
-        # https://github.com/torognes/vsearch/issues/272
-        self.assertEqual(len(obs_chime), len(exp_chime))
-        # self.assertEqual(obs_chime, exp_chime)
+        self.assertEqual(obs_chime, exp_chime)
 
         # sequences are reverse-sorted by abundance in output
         obs_nonchime = _read_seqs(nonchime)

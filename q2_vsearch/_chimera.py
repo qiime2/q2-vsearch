@@ -9,6 +9,7 @@
 import tempfile
 
 import biom
+import skbio.io
 from q2_types.feature_data import DNAFASTAFormat
 
 from ._cluster_features import _fasta_with_sizes, run_command
@@ -45,22 +46,26 @@ def _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
     nonchimeras = DNAFASTAFormat()
     uchime_stats = UchimeStatsFmt()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
-        _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
-        cmd = ['vsearch',
-               '--uchime_ref', fasta_with_sizes.name,
-               '--uchimeout', str(uchime_stats),
-               '--nonchimeras', str(nonchimeras),
-               '--chimeras', str(chimeras),
-               '--dn', str(dn),
-               '--mindiffs', str(mindiffs),
-               '--mindiv', str(mindiv),
-               '--minh', str(minh),
-               '--xn', str(xn),
-               '--db', str(reference_sequences),
-               '--qmask', 'none',  # ensures no lowercase DNA chars
-               '--xsize',
-               '--threads', str(threads)]
-        run_command(cmd)
+        with tempfile.NamedTemporaryFile() as temp_chimeras:
+            _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
+            cmd = ['vsearch',
+                   '--uchime_ref', fasta_with_sizes.name,
+                   '--uchimeout', str(uchime_stats),
+                   '--nonchimeras', str(nonchimeras),
+                   '--chimeras', temp_chimeras.name,
+                   '--dn', str(dn),
+                   '--mindiffs', str(mindiffs),
+                   '--mindiv', str(mindiv),
+                   '--minh', str(minh),
+                   '--xn', str(xn),
+                   '--db', str(reference_sequences),
+                   '--qmask', 'none',  # ensures no lowercase DNA chars
+                   '--xsize',
+                   '--threads', str(threads)]
+            run_command(cmd)
+            # this processing step should be removed, pending fix of:
+            # https://github.com/qiime2/q2-vsearch/issues/39
+            _fix_chimera_ids(temp_chimeras, chimeras)
 
     return cmd, chimeras, nonchimeras, uchime_stats
 
@@ -84,19 +89,34 @@ def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
     nonchimeras = DNAFASTAFormat()
     uchime_stats = UchimeStatsFmt()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
-        _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
-        cmd = ['vsearch',
-               '--uchime_denovo', fasta_with_sizes.name,
-               '--uchimeout', str(uchime_stats),
-               '--nonchimeras', str(nonchimeras),
-               '--chimeras', str(chimeras),
-               '--dn', str(dn),
-               '--mindiffs', str(mindiffs),
-               '--mindiv', str(mindiv),
-               '--minh', str(minh),
-               '--xn', str(xn),
-               '--qmask', 'none',  # ensures no lowercase DNA chars
-               '--xsize']
-        run_command(cmd)
+        with tempfile.NamedTemporaryFile() as temp_chimeras:
+            _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
+            cmd = ['vsearch',
+                   '--uchime_denovo', fasta_with_sizes.name,
+                   '--uchimeout', str(uchime_stats),
+                   '--nonchimeras', str(nonchimeras),
+                   '--chimeras', temp_chimeras.name,
+                   '--dn', str(dn),
+                   '--mindiffs', str(mindiffs),
+                   '--mindiv', str(mindiv),
+                   '--minh', str(minh),
+                   '--xn', str(xn),
+                   '--qmask', 'none',  # ensures no lowercase DNA chars
+                   '--xsize']
+            run_command(cmd)
+            # this processing step should be removed, pending fix of:
+            # https://github.com/qiime2/q2-vsearch/issues/39
+            _fix_chimera_ids(temp_chimeras, chimeras)
 
     return cmd, chimeras, nonchimeras, uchime_stats
+
+
+def _fix_chimera_ids(temp_chimeras, output_chimeras):
+    # this processing function should be removed, pending fix of:
+    # https://github.com/qiime2/q2-vsearch/issues/39
+    temp_chimeras.seek(0)
+    with open(str(output_chimeras), 'w') as out_fh:
+        for seq in skbio.io.read(temp_chimeras, format='fasta',
+                                 constructor=skbio.DNA):
+            seq.metadata['id'] = seq.metadata['id'].rsplit(';', 1)[0]
+            seq.write(out_fh)
