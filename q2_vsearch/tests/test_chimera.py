@@ -53,7 +53,8 @@ class UchimeDenovoTests(TestPluginBase):
                         self.input_sequences_list[2]]
         self.assertEqual(obs_nonchime, exp_nonchime)
 
-        stats_text = stats.open().read()
+        with stats.open() as stats_fh:
+            stats_text = stats_fh.read()
         self.assertTrue('feature1' in stats_text)
         self.assertTrue('feature2' in stats_text)
         self.assertTrue('feature3' in stats_text)
@@ -86,7 +87,8 @@ class UchimeDenovoTests(TestPluginBase):
                         self.input_sequences_list[1]]
         self.assertEqual(obs_nonchime, exp_nonchime)
 
-        stats_text = stats.open().read()
+        with stats.open() as stats_fh:
+            stats_text = stats_fh.read()
         self.assertTrue('feature1' in stats_text)
         self.assertTrue('feature2' in stats_text)
         self.assertTrue('feature3' in stats_text)
@@ -147,7 +149,8 @@ class UchimeRefTests(TestPluginBase):
                         self.input_sequences_list[2]]
         self.assertEqual(obs_nonchime, exp_nonchime)
 
-        stats_text = stats.open().read()
+        with stats.open() as stats_fh:
+            stats_text = stats_fh.read()
         self.assertTrue('feature1' in stats_text)
         self.assertTrue('feature2' in stats_text)
         self.assertTrue('feature3' in stats_text)
@@ -176,7 +179,8 @@ class UchimeRefTests(TestPluginBase):
                         self.input_sequences_list[3]]
         self.assertEqual(obs_nonchime, exp_nonchime)
 
-        stats_text = stats.open().read()
+        with stats.open() as stats_fh:
+            stats_text = stats_fh.read()
         self.assertTrue('feature1' in stats_text)
         self.assertTrue('feature2' in stats_text)
         self.assertTrue('feature3' in stats_text)
