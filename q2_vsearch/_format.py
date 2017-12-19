@@ -6,15 +6,21 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import csv
+
 import qiime2.plugin.model as model
+from qiime2.plugin import ValidationError
 
 
 class UchimeStatsFmt(model.TextFileFormat):
-    def sniff(self):
+    def _validate_(self):
         with open(str(self)) as fh:
-            header = fh.readline().strip().split('\t')
-
-        return len(header) == 18
+            csv_reader = csv.reader(fh)
+            for fields in csv_reader:
+                if len(fields) != 18:
+                    raise ValidationError(
+                        'Incorrect number of fields detected. Should be '
+                        'exactly 18.')
 
 
 UchimeStatsDirFmt = model.SingleFileDirectoryFormat(
