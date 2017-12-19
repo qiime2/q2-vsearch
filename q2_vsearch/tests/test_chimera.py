@@ -10,12 +10,14 @@ import os
 
 import biom
 import numpy as np
+
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.plugin import ValidationError
 from qiime2.util import redirected_stdio
 from q2_types.feature_data import DNAFASTAFormat
-
 from q2_vsearch._chimera import (uchime_denovo, _uchime_denovo,
                                  uchime_ref, _uchime_ref)
+from q2_vsearch._format import UchimeStatsFmt
 from .test_cluster_features import _read_seqs
 
 
@@ -204,3 +206,33 @@ class UchimeRefTests(TestPluginBase):
         self.assertTrue('--minh 0.42' in cmd)
         self.assertTrue('--xn 9.0' in cmd)
         self.assertTrue('--threads 2' in cmd)
+
+
+class UchimeStatsFmtTests(TestPluginBase):
+    package = 'q2_vsearch.tests'
+
+    def test_validate_positive(self):
+        filepath = self.get_data_path('uchime-stats-1.txt')
+        format = UchimeStatsFmt(filepath, mode='r')
+
+        format.validate(level='min')
+        format.validate(level='max')
+
+    def test_validate_negative(self):
+        filepath = self.get_data_path('uchime-stats-invalid-1.txt')
+        format = UchimeStatsFmt(filepath, mode='r')
+
+        with self.assertRaisesRegex(ValidationError, 'exactly 18'):
+            format.validate(level='min')
+
+        with self.assertRaisesRegex(ValidationError, 'exactly 18'):
+            format.validate(level='max')
+
+        filepath = self.get_data_path('uchime-stats-invalid-2.txt')
+        format = UchimeStatsFmt(filepath, mode='r')
+
+        # file appears valid with min
+        format.validate(level='min')
+
+        with self.assertRaisesRegex(ValidationError, 'exactly 18'):
+            format.validate(level='max')
