@@ -23,6 +23,9 @@ requirements:
     - vsearch >=2.5.0
     - scikit-bio
     - biom-format >=2.1.5,<2.2.0
+    - numpy
+    - pandas
+    - pyyaml
     - qiime2 {{ release }}.*
     - q2-types {{ release }}.*
     - q2-feature-table {{ release }}.*
