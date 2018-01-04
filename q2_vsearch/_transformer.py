@@ -6,22 +6,43 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import collections
+
 import pandas as pd
+import numpy as np
 import qiime2
 
 from .plugin_setup import plugin
 from ._format import UchimeStatsFmt
 
-
-_uchime_stats_header = ['score', 'Feature ID', 'A', 'B', 'T', 'idQM', 'idQA',
-                        'idQB', 'idAB', 'idQT', 'LY', 'LN', 'LA', 'RY', 'RN',
-                        'RA', 'div', 'YN']
+# many of the numeric fields will contain * if a query is
+# not chimeric, so being safe and making all fields other than
+# score strings
+_uchime_stats_header = collections.OrderedDict([
+     ('score', np.number),
+     ('feature-id', np.str),
+     ('A', np.str),
+     ('B', np.str),
+     ('T', np.str),
+     ('idQM', np.str),
+     ('idQA', np.str),
+     ('idQB', np.str),
+     ('idAB', np.str),
+     ('idQT', np.str),
+     ('LY', np.str),
+     ('LN', np.str),
+     ('LA', np.str),
+     ('RY', np.str),
+     ('RN', np.str),
+     ('RA', np.str),
+     ('div', np.str),
+     ('YN', np.str)])
 
 
 def _stats_to_df(ff):
-    df = pd.read_csv(str(ff), sep='\t')
-    df.columns = _uchime_stats_header
-    df = df.set_index('Feature ID')
+    df = pd.read_csv(str(ff), sep='\t', index_col='feature-id',
+                     names=_uchime_stats_header.keys(),
+                     dtype=_uchime_stats_header)
     return df
 
 
