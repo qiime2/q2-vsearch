@@ -11,6 +11,7 @@ import os
 import biom
 import numpy as np
 
+import qiime2
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugin import ValidationError
 from qiime2.util import redirected_stdio
@@ -236,3 +237,12 @@ class UchimeStatsFmtTests(TestPluginBase):
 
         with self.assertRaisesRegex(ValidationError, 'exactly 18'):
             format.validate(level='max')
+
+    def test_transform_to_metadata(self):
+        filepath = self.get_data_path('uchime-stats-1.txt')
+        format = UchimeStatsFmt(filepath, mode='r')
+        transformer = self.get_transformer(UchimeStatsFmt, qiime2.Metadata)
+        obs = transformer(format)
+        self.assertEqual(obs.id_count, 6)
+        self.assertEqual(obs.column_count, 17)
+        self.assertEqual(obs.id_header, 'feature-id')
