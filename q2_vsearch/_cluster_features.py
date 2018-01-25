@@ -329,7 +329,7 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
     # It is possible that all of the sequences matched the reference database,
     # if that is the case, don't worry about running cluster_features_de_novo.
     if unmatched_seqs.view(pd.Series).size > 0:
-        unmatched_seqs_md = Metadata.from_artifact(unmatched_seqs)
+        unmatched_seqs_md = unmatched_seqs.view(Metadata)
         unmatched_table, = filter_features(table=table,
                                            metadata=unmatched_seqs_md)
 
