@@ -22,6 +22,7 @@ from q2_types.per_sample_sequences import (
     Sequences, SequencesWithQuality, PairedEndSequencesWithQuality,
     JoinedSequencesWithQuality)
 
+citations = qiime2.plugin.Citations.load('citations.bib', package='q2_vsearch')
 plugin = qiime2.plugin.Plugin(
     name='vsearch',
     version=q2_vsearch.__version__,
@@ -32,9 +33,7 @@ plugin = qiime2.plugin.Plugin(
     description=('This plugin wraps the vsearch application, and provides '
                  'methods for clustering and dereplicating features and '
                  'sequences.'),
-    citation_text=("Rognes T, Flouri T, Nichols B, Quince C, Mahé F. (2016) "
-                   "VSEARCH: a versatile open source tool for metagenomics. "
-                   "PeerJ 4:e2584. doi: 10.7717/peerj.2584")
+    citations=[citations['rognes2016vsearch']]
 )
 
 plugin.register_formats(UchimeStatsFmt, UchimeStatsDirFmt)
@@ -222,6 +221,7 @@ plugin.pipelines.register_function(
                 'iterations of cluster_features_open_reference, if '
                 'applicable. See the vsearch documentation for details on how '
                 'sequence clustering is performed.',
+    citations=[citations['rideout2014subsampled']]
 )
 
 plugin.methods.register_function(
