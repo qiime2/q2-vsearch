@@ -246,7 +246,7 @@ plugin.methods.register_function(
     },
     name='Dereplicate sequences.',
     description=('Dereplicate sequence data and create a feature table and '
-                 'feature representative sequences. Feature identfiers '
+                 'feature representative sequences. Feature identifiers '
                  'in the resulting artifacts will be the sha1 hash '
                  'of the sequence defining each feature. If clustering of '
                  'features into OTUs is desired, the resulting artifacts '
