@@ -20,7 +20,7 @@ requirements:
   run:
     - python 3.5*
     - setuptools
-    - vsearch >=2.5.0
+    - vsearch 2.7.0
     - scikit-bio
     - biom-format >=2.1.5,<2.2.0
     - numpy
