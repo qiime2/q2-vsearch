@@ -114,7 +114,8 @@ def _parse_uc(fh):
                       sample_ids=sample_ids)
 
 
-def dereplicate_sequences(sequences: QIIME1DemuxDirFmt
+def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
+                          prefix: bool=False
                           )-> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
@@ -126,6 +127,8 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt
                '--uc', out_uc.name,
                '--qmask', 'none',
                '--xsize']
+        if prefix:
+            cmd[1] = '--derep_prefix'
         run_command(cmd)
         out_uc.seek(0)
         table = _parse_uc(out_uc)
