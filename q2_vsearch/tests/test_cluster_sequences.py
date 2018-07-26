@@ -105,30 +105,30 @@ class DereplicateSequences(TestPluginBase):
 
         exp_table = biom.Table(np.array([[2, 2],
                                         [2, 0]]),
-                            ['4574b947a0159c0da35a1f30f989681a1d9f64ef',
-                            '16a1263bde4f2f99422630d1bb87935c4236d1ba'],
-                            ['s2', 'sample1'])
+                               ['4574b947a0159c0da35a1f30f989681a1d9f64ef',
+                                '16a1263bde4f2f99422630d1bb87935c4236d1ba'],
+                               ['s2', 'sample1'])
 
         with redirected_stdio(stderr=os.devnull):
-          obs_table, obs_sequences = dereplicate_sequences(
-              sequences=input_sequences, prefix=True)
+            obs_table, obs_sequences = dereplicate_sequences(
+                sequences=input_sequences, prefix=True)
         # order of identifiers is important for biom.Table equality
         obs_table = \
-          obs_table.sort_order(exp_table.ids(axis='observation'),
-                               axis='observation')
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
         self.assertEqual(obs_table, exp_table)
 
         # sequences are reverse-sorted by abundance in output
         obs_seqs = list(skbio.io.read(str(obs_sequences),
-                      constructor=skbio.DNA, format='fasta'))
+                        constructor=skbio.DNA, format='fasta'))
         exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
-                            metadata={'id': ('4574b947a0159c0da35a1f30f'
-                                             '989681a1d9f64ef'),
-                                      'description': 's2_1'}),
-                  skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
-                            metadata={'id': ('16a1263bde4f2f99422630d1bb'
-                                             '87935c4236d1ba'),
-                                      'description': 's2_42'})]
+                              metadata={'id': ('4574b947a0159c0da35a1f30f'
+                                               '989681a1d9f64ef'),
+                                        'description': 's2_1'}),
+                    skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
+                              metadata={'id': ('16a1263bde4f2f99422630d1bb'
+                                               '87935c4236d1ba'),
+                                        'description': 's2_42'})]
         self.assertEqual(obs_seqs, exp_seqs)
 
 
