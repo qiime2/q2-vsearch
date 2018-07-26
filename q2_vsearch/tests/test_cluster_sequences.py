@@ -103,11 +103,11 @@ class DereplicateSequences(TestPluginBase):
       input_sequences_fp = self.get_data_path('seqs-1')
       input_sequences = QIIME1DemuxDirFmt(input_sequences_fp, 'r')
 
-      exp_table = biom.Table(np.array([[4],
-                                       [2]]),
+      exp_table = biom.Table(np.array([[2, 2],
+                                       [2, 0]]),
                              ['4574b947a0159c0da35a1f30f989681a1d9f64ef',
                               '16a1263bde4f2f99422630d1bb87935c4236d1ba'],
-                             ['s2'])
+                             ['s2', 'sample1'])
 
       with redirected_stdio(stderr=os.devnull):
           obs_table, obs_sequences = dereplicate_sequences(
