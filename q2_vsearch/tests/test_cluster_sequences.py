@@ -99,6 +99,38 @@ class DereplicateSequences(TestPluginBase):
                                         'description': 's2_2'})]
         self.assertEqual(obs_seqs, exp_seqs)
 
+    def test_dereplicate_sequences_prefix(self):
+      input_sequences_fp = self.get_data_path('seqs-1')
+      input_sequences = QIIME1DemuxDirFmt(input_sequences_fp, 'r')
+
+      exp_table = biom.Table(np.array([[4],
+                                       [2]]),
+                             ['4574b947a0159c0da35a1f30f989681a1d9f64ef',
+                              '16a1263bde4f2f99422630d1bb87935c4236d1ba'],
+                             ['s2'])
+
+      with redirected_stdio(stderr=os.devnull):
+          obs_table, obs_sequences = dereplicate_sequences(
+              sequences=input_sequences, prefix=True)
+      # order of identifiers is important for biom.Table equality
+      obs_table = \
+          obs_table.sort_order(exp_table.ids(axis='observation'),
+                               axis='observation')
+      self.assertEqual(obs_table, exp_table)
+
+      # sequences are reverse-sorted by abundance in output
+      obs_seqs = list(skbio.io.read(str(obs_sequences),
+                      constructor=skbio.DNA, format='fasta'))
+      exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
+                            metadata={'id': ('4574b947a0159c0da35a1f30f'
+                                             '989681a1d9f64ef'),
+                                      'description': 's2_1'}),
+                  skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
+                            metadata={'id': ('16a1263bde4f2f99422630d1bb'
+                                             '87935c4236d1ba'),
+                                      'description': 's2_42'})]
+      self.assertEqual(obs_seqs, exp_seqs)
+
 
 class ParseUc(TestPluginBase):
     # These tests and the test data below them is copied from the biom-format
