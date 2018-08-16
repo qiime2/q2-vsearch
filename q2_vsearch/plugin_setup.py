@@ -232,7 +232,7 @@ plugin.methods.register_function(
                       SampleData[JoinedSequencesWithQuality])
     },
     parameters={
-        'prefix': qiime2.plugin.Bool,
+        'derep_prefix': qiime2.plugin.Bool,
     },
     outputs=[
         ('dereplicated_table', FeatureTable[Frequency]),
@@ -242,10 +242,11 @@ plugin.methods.register_function(
         'sequences': 'The sequences to be dereplicated.',
     },
     parameter_descriptions={
-        'prefix': ('Merge sequences with identical prefixes. If a sequence is '
-                   'identical to the prefix of two or more longer sequences, '
-                   'it is clustered with the shortest of them. If they are '
-                   'equally long, it is clustered with the most abundant.'),
+        'derep_prefix': ('Merge sequences with identical prefixes. If a '
+                         'sequence is identical to the prefix of two or more '
+                         'longer sequences, it is clustered with the shortest '
+                         'of them. If they are equally long, it is clustered '
+                         'with the most abundant.'),
     },
     output_descriptions={
         'dereplicated_table': 'The table of dereplicated sequences.',

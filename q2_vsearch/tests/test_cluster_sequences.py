@@ -111,7 +111,7 @@ class DereplicateSequences(TestPluginBase):
 
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = dereplicate_sequences(
-                sequences=input_sequences, prefix=True)
+                sequences=input_sequences, derep_prefix=True)
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
