@@ -26,12 +26,12 @@ _uchime_defaults = {'dn': 1.4,
 def uchime_ref(sequences: DNAFASTAFormat,
                table: biom.Table,
                reference_sequences: DNAFASTAFormat,
-               dn: float=_uchime_defaults['dn'],
-               mindiffs: int=_uchime_defaults['mindiffs'],
-               mindiv: float=_uchime_defaults['mindiv'],
-               minh: float=_uchime_defaults['minh'],
-               xn: float=_uchime_defaults['xn'],
-               threads: int=1) \
+               dn: float = _uchime_defaults['dn'],
+               mindiffs: int = _uchime_defaults['mindiffs'],
+               mindiv: float = _uchime_defaults['mindiv'],
+               minh: float = _uchime_defaults['minh'],
+               xn: float = _uchime_defaults['xn'],
+               threads: int = 1) \
                -> (DNAFASTAFormat, DNAFASTAFormat, UchimeStatsFmt):
     cmd, chimeras, nonchimeras, uchime_stats = \
         _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
@@ -72,11 +72,11 @@ def _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
 
 def uchime_denovo(sequences: DNAFASTAFormat,
                   table: biom.Table,
-                  dn: float=_uchime_defaults['dn'],
-                  mindiffs: int=_uchime_defaults['mindiffs'],
-                  mindiv: float=_uchime_defaults['mindiv'],
-                  minh: float=_uchime_defaults['minh'],
-                  xn: float=_uchime_defaults['xn']) \
+                  dn: float = _uchime_defaults['dn'],
+                  mindiffs: int = _uchime_defaults['mindiffs'],
+                  mindiv: float = _uchime_defaults['mindiv'],
+                  minh: float = _uchime_defaults['minh'],
+                  xn: float = _uchime_defaults['xn']) \
                   -> (DNAFASTAFormat, DNAFASTAFormat, UchimeStatsFmt):
     cmd, chimeras, nonchimeras, uchime_stats = \
         _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn)
