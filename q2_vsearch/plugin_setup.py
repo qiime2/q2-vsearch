@@ -13,6 +13,9 @@ import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
 import q2_vsearch._join_pairs
 import q2_vsearch._chimera
+
+import q2_vsearch._stats
+
 from q2_vsearch._type import UchimeStats
 from q2_vsearch._format import UchimeStatsFmt, UchimeStatsDirFmt
 from q2_types.feature_data import FeatureData, Sequence
@@ -425,6 +428,25 @@ plugin.methods.register_function(
                  'to filter chimeric features from the corresponding feature '
                  'table. For additional details, please refer to the vsearch '
                  'documentation.')
+)
+
+
+plugin.visualizers.register_function(
+    function=q2_vsearch._stats.fastq_stats,
+    inputs={
+        'sequences': SampleData[SequencesWithQuality
+                                | PairedEndSequencesWithQuality],
+    },
+    parameters={
+    },
+    input_descriptions={
+        'sequences': 'FASTQ sequences to calculate stats from.'
+    },
+    parameter_descriptions={
+    },
+    name='FASTQ file processing with vsearch.',
+    description=('Apply vsearch fastq_stats to get an overview '
+                 'of your sequences. #TBA')
 )
 
 importlib.import_module('q2_vsearch._transformer')
