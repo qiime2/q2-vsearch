@@ -13,7 +13,6 @@ import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
 import q2_vsearch._join_pairs
 import q2_vsearch._chimera
-
 import q2_vsearch._stats
 
 from q2_vsearch._type import UchimeStats
@@ -432,7 +431,7 @@ plugin.methods.register_function(
 
 
 plugin.visualizers.register_function(
-    function=q2_vsearch._stats.fastq_stats,
+    function=q2_vsearch._stats.fastq_stats_paired,
     inputs={
         'sequences': SampleData[SequencesWithQuality
                                 | PairedEndSequencesWithQuality],
@@ -448,5 +447,24 @@ plugin.visualizers.register_function(
     description=('Apply vsearch fastq_stats to get an overview '
                  'of your sequences. #TBA')
 )
+
+
+plugin.visualizers.register_function(
+    function=q2_vsearch._stats.fastq_stats_single,
+    inputs={
+        'sequences': SampleData[SequencesWithQuality],
+    },
+    parameters={
+    },
+    input_descriptions={
+        'sequences': 'FASTQ sequences to calculate stats from.'
+    },
+    parameter_descriptions={
+    },
+    name='FASTQ file processing with vsearch.',
+    description=('Apply vsearch fastq_stats to get an overview '
+                 'of your sequences. #TBA')
+)
+
 
 importlib.import_module('q2_vsearch._transformer')

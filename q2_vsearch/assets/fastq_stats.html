@@ -1,0 +1,26 @@
+{% extends "tab-child.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1>vsearch - fastq_stats</h1>
+        {% set colsize = 6 if paired else 12 %}
+        <div class="col-lg-{{ colsize }}">
+            <h4>Forward Reads</h4>
+            <a href={{ datafiles.forward.stats }}>Download as TXT</a>
+            <p style="margin-top: 15px">
+                <iframe src="{{ datafiles.forward.stats }}" frameborder="0" height="600px" width="95%"></iframe>
+            </p>
+        </div>
+        {% if paired %}
+        <div class="col-lg-{{ colsize }}">
+            <h4>Reverse Reads</h4>
+            <a href={{ datafiles.reverse.stats }}>Download as TXT</a>
+            <p style="margin-top: 15px">
+                <iframe src="{{ datafiles.reverse.stats }}" frameborder="0" height="600px" width="95%"></iframe>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
