@@ -429,7 +429,6 @@ plugin.methods.register_function(
                  'documentation.')
 )
 
-
 plugin.visualizers.register_function(
     function=q2_vsearch._stats.fastq_stats_paired,
     inputs={
@@ -448,7 +447,6 @@ plugin.visualizers.register_function(
                  'of your sequences. #TBA')
 )
 
-
 plugin.visualizers.register_function(
     function=q2_vsearch._stats.fastq_stats_single,
     inputs={
@@ -465,6 +463,5 @@ plugin.visualizers.register_function(
     description=('Apply vsearch fastq_stats to get an overview '
                  'of your sequences. #TBA')
 )
-
 
 importlib.import_module('q2_vsearch._transformer')

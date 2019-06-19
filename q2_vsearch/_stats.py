@@ -1,14 +1,12 @@
 import os
 import pkg_resources
 import subprocess
-
 import pandas as pd
 
 from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt)
 import q2templates
-
 
 TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
 
