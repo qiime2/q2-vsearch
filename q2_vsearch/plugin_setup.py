@@ -432,19 +432,22 @@ plugin.methods.register_function(
 plugin.visualizers.register_function(
     function=q2_vsearch._stats.fastq_stats_paired,
     inputs={
-        'sequences': SampleData[SequencesWithQuality
-                                | PairedEndSequencesWithQuality],
+        'sequences': SampleData[PairedEndSequencesWithQuality],
     },
     parameters={
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                          0, None, inclusive_start=True)
     },
     input_descriptions={
-        'sequences': 'FASTQ sequences to calculate stats from.'
+        'sequences': 'Fastq paired-end sequences'
     },
     parameter_descriptions={
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
     },
-    name='FASTQ file processing with vsearch.',
-    description=('Apply vsearch fastq_stats to get an overview '
-                 'of your sequences. #TBA')
+    name='Fastq file processing with vsearch.',
+    description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
+                 'to get an overview of your forward and reverse sequences.')
 )
 
 plugin.visualizers.register_function(
@@ -453,15 +456,19 @@ plugin.visualizers.register_function(
         'sequences': SampleData[SequencesWithQuality],
     },
     parameters={
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+                          0, None, inclusive_start=True)
     },
     input_descriptions={
-        'sequences': 'FASTQ sequences to calculate stats from.'
+        'sequences': 'Fastq single-end sequences'
     },
     parameter_descriptions={
+        'threads': ('The number of threads to use for computation. Passing 0 '
+                    'will launch one thread per CPU core.')
     },
-    name='FASTQ file processing with vsearch.',
-    description=('Apply vsearch fastq_stats to get an overview '
-                 'of your sequences. #TBA')
+    name='Fastq file processing with vsearch.',
+    description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
+                 'to get an overview of your sequences.')
 )
 
 importlib.import_module('q2_vsearch._transformer')

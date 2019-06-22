@@ -2,6 +2,7 @@ import os
 import pkg_resources
 import subprocess
 import pandas as pd
+from multiprocessing import Pool, cpu_count
 
 from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
@@ -11,46 +12,48 @@ import q2templates
 TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
 
 
-def _build_commands(output_dir: str, filelist, direction='forward'):
-    url = {direction: {}}
+def _get_stats(cmds):
+    cmd, cmd2 = cmds
+    process1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    process2 = subprocess.run(cmd2, stdin=process1.stdout)
+
+
+def _build_cmds(output_dir: str, filelist, direction='forward'):
+    datafiles = {direction: {}}
     cmd = ['zcat'] + filelist
 
     results = os.path.join(
                 output_dir, 'fastq_stats_{0}.txt'.format(direction))
     stats = ['vsearch', '--fastq_stats', '-', '--log', results]
-    url[direction]['stats'] = os.path.basename(results)
+    datafiles[direction]['stats'] = os.path.basename(results)
 
     results = os.path.join(
                 output_dir, 'fastq_eestats_{0}.txt'.format(direction))
     eestats = ['vsearch', '--fastq_eestats', '-', '--output', results]
-    url[direction]['eestats'] = os.path.basename(results)
+    datafiles[direction]['eestats'] = os.path.basename(results)
 
     results = os.path.join(
                 output_dir, 'fastq_eestats2_{0}.txt'.format(direction))
     eestats2 = ['vsearch', '--fastq_eestats2', '-', '--output', results]
-    url[direction]['eestats2'] = os.path.basename(results)
+    datafiles[direction]['eestats2'] = os.path.basename(results)
 
-    for cmd2 in [stats, eestats, eestats2]:
-        # pipe
-        process1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        process2 = subprocess.run(cmd2, stdin=process1.stdout)
-    return(url)
+    return(datafiles, [(cmd, stats), (cmd, eestats), (cmd, eestats2)])
 
 
-def _get_html(datafiles):
+def _get_html(output_dir, datafiles):
     html = {}
     for direction in datafiles:
         html[direction] = {}
         for stats_type in datafiles[direction]:
             filename = datafiles[direction][stats_type]
+            filename = os.path.join(output_dir, filename)
             data_df = pd.read_csv(filename, sep='\t')
             html[direction][stats_type] = q2templates.df_to_html(data_df,
                                                                  index=False)
     return(html)
 
 
-def _fastq_stats(output_dir: str, sequences, paired=False):
-    url = {}
+def _fastq_stats(output_dir: str, sequences, threads, paired=False):
     # read manifest and add complete path
     manifest = pd.read_csv(os.path.join(str(sequences),
                            sequences.manifest.pathspec),
@@ -58,15 +61,24 @@ def _fastq_stats(output_dir: str, sequences, paired=False):
     manifest.filename = manifest.filename.apply(
         lambda x: os.path.join(str(sequences), x))
 
-    # filter read direction
+    # get commands and filelist
     r_fwd = manifest[manifest.direction == 'forward'].filename.values.tolist()
-    datafiles = _build_commands(output_dir, r_fwd)
+    datafiles, cmds = _build_cmds(output_dir, r_fwd)
     if (paired):
         r_rev = manifest[
             manifest.direction == 'reverse'].filename.values.tolist()
-        datafiles.update(_build_commands(output_dir, r_rev, 'reverse'))
+        datafiles2, cmds2 = _build_cmds(output_dir, r_rev, 'reverse')
+        cmds.extend(cmds2)
+        datafiles.update(datafiles2)
 
-    html = _get_html(datafiles)
+    # multiprocessing
+    cpus = cpu_count()
+    if ((cpus < threads) or (threads == 0)):
+        threads = cpus
+    pool = Pool(processes=threads)
+    pool.map(_get_stats, cmds)
+
+    html = _get_html(output_dir, datafiles)
 
     index = os.path.join(TEMPLATES, 'index.html')
     stats_template = os.path.join(TEMPLATES, 'fastq_stats.html')
@@ -88,12 +100,14 @@ def _fastq_stats(output_dir: str, sequences, paired=False):
 
 
 def fastq_stats_paired(output_dir: str,
-                       sequences: SingleLanePerSamplePairedEndFastqDirFmt
+                       sequences: SingleLanePerSamplePairedEndFastqDirFmt,
+                       threads: int = 1
                        ) -> None:
-    _fastq_stats(output_dir, sequences, True)
+    _fastq_stats(output_dir, sequences, threads, True)
 
 
 def fastq_stats_single(output_dir: str,
-                       sequences: SingleLanePerSampleSingleEndFastqDirFmt
+                       sequences: SingleLanePerSampleSingleEndFastqDirFmt,
+                       threads: int = 1
                        ) -> None:
-    _fastq_stats(output_dir, sequences)
+    _fastq_stats(output_dir, sequences, threads)
