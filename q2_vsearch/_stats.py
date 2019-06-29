@@ -12,10 +12,17 @@ import q2templates
 TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
 
 
-def _get_stats(cmds):
+def _get_stats(cmds) -> None:
     cmd, cmd2 = cmds
     process1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    process2 = subprocess.run(cmd2, stdin=process1.stdout)
+    process2 = subprocess.Popen(cmd2, stdin=process1.stdout)
+
+    while True:
+        process1.poll()
+        process2.poll()
+        if process1.returncode is not None and process2.returncode is not None:
+            process1.communicate(timeout=15)
+            break
 
 
 def _build_cmds(output_dir: str, filelist, direction='forward'):
@@ -24,17 +31,19 @@ def _build_cmds(output_dir: str, filelist, direction='forward'):
 
     results = os.path.join(
                 output_dir, 'fastq_stats_{0}.txt'.format(direction))
-    stats = ['vsearch', '--fastq_stats', '-', '--log', results]
+    stats = ['vsearch', '--quiet', '--fastq_stats', '-', '--log', results]
     datafiles[direction]['stats'] = os.path.basename(results)
 
     results = os.path.join(
                 output_dir, 'fastq_eestats_{0}.txt'.format(direction))
-    eestats = ['vsearch', '--fastq_eestats', '-', '--output', results]
+    eestats = ['vsearch', '--quiet', '--fastq_eestats',
+               '-', '--output', results]
     datafiles[direction]['eestats'] = os.path.basename(results)
 
     results = os.path.join(
                 output_dir, 'fastq_eestats2_{0}.txt'.format(direction))
-    eestats2 = ['vsearch', '--fastq_eestats2', '-', '--output', results]
+    eestats2 = ['vsearch', '--quiet', '--fastq_eestats2',
+                '-', '--output', results]
     datafiles[direction]['eestats2'] = os.path.basename(results)
 
     return(datafiles, [(cmd, stats), (cmd, eestats), (cmd, eestats2)])
@@ -53,10 +62,10 @@ def _get_html(output_dir, datafiles):
     return(html)
 
 
-def _fastq_stats(output_dir: str, sequences, threads, paired=False):
+def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
     # read manifest and add complete path
     manifest = pd.read_csv(os.path.join(str(sequences),
-                           sequences.manifest.pathspec),
+                                        sequences.manifest.pathspec),
                            header=0, comment='#')
     manifest.filename = manifest.filename.apply(
         lambda x: os.path.join(str(sequences), x))
@@ -75,8 +84,9 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False):
     cpus = cpu_count()
     if ((cpus < threads) or (threads == 0)):
         threads = cpus
-    pool = Pool(processes=threads)
-    pool.map(_get_stats, cmds)
+    with Pool(processes=threads) as pool:
+        pool.map(_get_stats, cmds)
+        pool.close()
 
     html = _get_html(output_dir, datafiles)
 
@@ -94,7 +104,7 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False):
                   'url': 'fastq_eestats.html'},
                  {'title': 'fastq_eestats2',
                   'url': 'fastq_eestats2.html'}],
-    }
+        }
     templates = [index, stats_template, eestats_template, eestats2_template]
     q2templates.render(templates, output_dir, context=context)
 
