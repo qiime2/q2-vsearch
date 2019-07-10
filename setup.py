@@ -30,6 +30,7 @@ setup(
                              'data/seqs-1/*',
                              'data/seqs-2/*',
                              'data/demux-1/*',
+                             'data/stats/*',
                              ]},
     zip_safe=False,
     )
