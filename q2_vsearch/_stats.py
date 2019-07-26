@@ -71,20 +71,15 @@ def _get_html(output_dir, datafiles):
 
 
 def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
-    # read manifest and add complete path
-    manifest = pd.read_csv(os.path.join(str(sequences),
-                                        sequences.manifest.pathspec),
-                           header=0, comment='#')
-    manifest.filename = manifest.filename.apply(
-        lambda x: os.path.join(str(sequences), x))
+    # read manifest
+    manifest = sequences.manifest.view(pd.DataFrame)
 
     # get commands and filelist
-    r_fwd = manifest[manifest.direction == 'forward'].filename.values.tolist()
-    datafiles, cmds = _build_cmds(output_dir, r_fwd)
+    datafiles, cmds = _build_cmds(output_dir, manifest['forward'].tolist())
     if (paired):
-        r_rev = manifest[
-            manifest.direction == 'reverse'].filename.values.tolist()
-        datafiles2, cmds2 = _build_cmds(output_dir, r_rev, 'reverse')
+        datafiles2, cmds2 = _build_cmds(output_dir,
+                                        manifest['reverse'].tolist(),
+                                        'reverse')
         cmds.extend(cmds2)
         datafiles.update(datafiles2)
 
