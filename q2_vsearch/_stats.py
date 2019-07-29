@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2019, Sabine Hurka (sabine.hurka@sabine-hurka.de)
+# Copyright (c) 2016-2019, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
