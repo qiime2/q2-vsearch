@@ -436,7 +436,7 @@ plugin.visualizers.register_function(
     },
     parameters={
         'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                          0, None, inclusive_start=True)
+            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
     },
     input_descriptions={
         'sequences': 'Fastq paired-end sequences'
@@ -457,7 +457,7 @@ plugin.visualizers.register_function(
     },
     parameters={
         'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                          0, None, inclusive_start=True)
+            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
     },
     input_descriptions={
         'sequences': 'Fastq single-end sequences'

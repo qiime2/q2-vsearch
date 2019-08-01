@@ -85,7 +85,12 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
 
     # multiprocessing
     cpus = cpu_count()
-    if ((cpus < threads) or (threads == 0)):
+    try:
+        if (cpus < threads):
+            threads = cpus
+    except TypeError:
+        # QIIME itself checks for allowed input format and values
+        # (see plugin_setup.py)
         threads = cpus
     with Pool(processes=threads) as pool:
         pool.map(_get_stats, cmds)
