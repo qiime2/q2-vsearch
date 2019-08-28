@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import os
+import fileinput
 import pkg_resources
 import subprocess
 import pandas as pd
@@ -20,22 +21,25 @@ import q2templates
 TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
 
 
-def _get_stats(cmds) -> None:
-    cmd, cmd2 = cmds
-    process1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    process2 = subprocess.Popen(cmd2, stdin=process1.stdout)
+def _get_stats_easy(cmds_packed) -> None:
+    filelist, cmds = cmds_packed
+    processes = []
+    for cmd in cmds:
+        processes.append(subprocess.Popen(cmd, stdin=subprocess.PIPE))
 
-    while True:
-        process1.poll()
-        process2.poll()
-        if process1.returncode is not None and process2.returncode is not None:
-            process1.communicate(timeout=15)
-            break
+    with fileinput.input(files=filelist, mode='r',
+                         openhook=fileinput.hook_compressed) as fh:
+        for line in fh:
+            for p in processes:
+                p.stdin.write(line)
+
+    for p in processes:
+        p.stdin.close()
+        p.wait()
 
 
 def _build_cmds(output_dir: str, filelist, direction='forward'):
     datafiles = {direction: {}}
-    cmd = ['zcat'] + filelist
 
     results = os.path.join(
                 output_dir, 'fastq_stats_{0}.txt'.format(direction))
@@ -54,7 +58,7 @@ def _build_cmds(output_dir: str, filelist, direction='forward'):
                 '-', '--output', results]
     datafiles[direction]['eestats2'] = os.path.basename(results)
 
-    return(datafiles, [(cmd, stats), (cmd, eestats), (cmd, eestats2)])
+    return(datafiles, [(filelist, [stats, eestats, eestats2])])
 
 
 def _get_html(output_dir, datafiles):
@@ -76,12 +80,13 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
 
     # get commands and filelist
     datafiles, cmds = _build_cmds(output_dir, manifest['forward'].tolist())
+
     if (paired):
-        datafiles2, cmds2 = _build_cmds(output_dir,
-                                        manifest['reverse'].tolist(),
-                                        'reverse')
-        cmds.extend(cmds2)
-        datafiles.update(datafiles2)
+        datafiles_rev, cmds_rev = _build_cmds(output_dir,
+                                              manifest['reverse'].tolist(),
+                                              'reverse')
+        datafiles.update(datafiles_rev)
+        cmds.extend(cmds_rev)
 
     # multiprocessing
     cpus = cpu_count()
@@ -92,9 +97,23 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
         # QIIME itself checks for allowed input format and values
         # (see plugin_setup.py)
         threads = cpus
-    with Pool(processes=threads) as pool:
-        pool.map(_get_stats, cmds)
-        pool.close()
+
+    if (threads < 4):  # read once and write once (3 or 6 times)
+        # refactor into (filelist, [single_command]) to only spawn one
+        # additional process in _get_stats_easy
+        for cmd_packed in cmds:
+            filelist, cmds = cmd_packed
+            for cmd in cmds:
+                _get_stats_easy((filelist, [cmd]))
+    else:   # read once and write three times (1 or 2 times)
+        # three additional processes spawn in _get_stats_easy
+        # so only one (single) or two (paired) worker are needed
+        jobs = 1
+        if (paired and threads >= 8):   # parallel fwd/rev
+            jobs = 2
+        with Pool(processes=jobs) as pool:
+            pool.map(_get_stats_easy, cmds)
+            pool.close()
 
     html = _get_html(output_dir, datafiles)
 

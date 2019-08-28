@@ -442,8 +442,8 @@ plugin.visualizers.register_function(
         'sequences': 'Fastq paired-end sequences'
     },
     parameter_descriptions={
-        'threads': ('The number of threads to use for computation. Passing 0 '
-                    'will launch one thread per CPU core.')
+        'threads': ('The number of threads used for computation. Use 4 or 8 '
+                    'threads to speedup and reduce I/O.')
     },
     name='Fastq file processing with vsearch.',
     description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
@@ -463,8 +463,8 @@ plugin.visualizers.register_function(
         'sequences': 'Fastq single-end sequences'
     },
     parameter_descriptions={
-        'threads': ('The number of threads to use for computation. Passing 0 '
-                    'will launch one thread per CPU core.')
+        'threads': ('The number of threads used for computation. Use 4 '
+                    'threads to speedup and reduce I/O.')
     },
     name='Fastq file processing with vsearch.',
     description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
