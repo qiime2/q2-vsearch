@@ -309,3 +309,16 @@ class MergePairsTests(TestPluginBase):
 
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_qmaxout 40' in ' '.join(cmd))
+
+    def test_join_pairs_alt_threads(self):
+        with redirected_stdio(stderr=os.devnull):
+            cmd, obs = _join_pairs_w_command_output(
+                self.input_seqs, threads=2)
+
+        # sanity check the output
+        self._test_manifest(obs)
+        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 3)
+
+        # confirm altered parameter was passed to vsearch
+        self.assertTrue('--threads 2' in ' '.join(cmd))
