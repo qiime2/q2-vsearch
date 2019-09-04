@@ -139,6 +139,7 @@ def _join_pairs_w_command_output(
             cmd += ['--fastq_maxmergelen', str(maxmergelen)]
         if maxee is not None:
             cmd += ['--fastq_maxee', str(maxee)]
+        cmd += ['--threads', str(threads)]
         if allowmergestagger:
             cmd.append('--fastq_allowmergestagger')
         run_command(cmd)
