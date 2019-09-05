@@ -22,7 +22,9 @@ class VSearchError(Exception):
     pass
 
 
-def run_command(cmd, verbose=True):
+def run_command(cmd, verbose=True, unwrap_fasta=True):
+    if unwrap_fasta:
+        cmd = cmd.join("--fasta_width 0")
     print("Running external command line application. This may print "
           "messages to stdout and/or stderr.")
     print("The command being run is below. This command cannot "
