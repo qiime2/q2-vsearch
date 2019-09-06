@@ -116,7 +116,7 @@ def _parse_uc(fh):
 
 def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                           derep_prefix: bool = False
-                          )-> (biom.Table, DNAFASTAFormat):
+                          ) -> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
         seqs_fp = '%s/seqs.fna' % str(sequences)
