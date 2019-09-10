@@ -19,7 +19,7 @@ requirements:
 
   run:
     - python {{ python }}
-    - vsearch 2.7.0
+    - vsearch 2.13.7
     - scikit-bio
     - biom-format >=2.1.5,<2.2.0
     - numpy
