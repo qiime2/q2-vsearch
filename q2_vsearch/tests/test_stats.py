@@ -37,9 +37,9 @@ class StatsTests(TestPluginBase):
 
         with tempfile.TemporaryDirectory() as output_dir:
             if (paired):
-                obs = fastq_stats_paired(output_dir, self.input_seqs, threads)
+                fastq_stats_paired(output_dir, self.input_seqs, threads)
             else:
-                obs = fastq_stats_single(output_dir, self.input_seqs, threads)
+                fastq_stats_single(output_dir, self.input_seqs, threads)
 
             pattern = output_dir + '/*.txt'
             filelist = [os.path.basename(x) for x in glob.glob(pattern)]
