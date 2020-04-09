@@ -1,0 +1,21 @@
+{% extends "tabbed.html" %}
+
+{% block title %}q2-vsearch : fastq_eestats{% endblock %}
+
+{% block tabcontent %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1>vsearch - fastq_eestats</h1>
+        <h4 id="fwdreads">Forward Reads</h4>
+        <a href="{{ datafiles.forward.eestats }}" download="{{ datafiles.forward.eestats }}">Download as TXT</a>
+        {{ html.forward.eestats }}
+    </div>
+    {% if paired %}
+    <div class="col-lg-12">
+        <h4 id="revreads">Reverse Reads</h4>
+        <a href="{{ datafiles.reverse.eestats }}" download="{{ datafiles.reverse.eestats }}">Download as TXT</a>
+        {{ html.reverse.eestats }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

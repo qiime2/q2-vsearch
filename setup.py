@@ -25,11 +25,13 @@ setup(
         ["q2-vsearch=q2_vsearch.plugin_setup:plugin"]
     },
     package_data={
-        'q2_vsearch': ['citations.bib'],
+        'q2_vsearch': ['assets/*.html',
+                       'citations.bib'],
         'q2_vsearch.tests': ['data/*',
                              'data/seqs-1/*',
                              'data/seqs-2/*',
                              'data/demux-1/*',
+                             'data/stats/*',
                              ]},
     zip_safe=False,
     )

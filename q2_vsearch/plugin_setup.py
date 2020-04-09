@@ -13,6 +13,8 @@ import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
 import q2_vsearch._join_pairs
 import q2_vsearch._chimera
+import q2_vsearch._stats
+
 from q2_vsearch._type import UchimeStats
 from q2_vsearch._format import UchimeStatsFmt, UchimeStatsDirFmt
 from q2_types.feature_data import FeatureData, Sequence
@@ -429,6 +431,50 @@ plugin.methods.register_function(
                  'to filter chimeric features from the corresponding feature '
                  'table. For additional details, please refer to the vsearch '
                  'documentation.')
+)
+
+plugin.visualizers.register_function(
+    function=q2_vsearch._stats.fastq_stats_paired,
+    inputs={
+        'sequences': SampleData[PairedEndSequencesWithQuality],
+    },
+    parameters={
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
+    },
+    input_descriptions={
+        'sequences': 'Fastq paired-end sequences',
+    },
+    parameter_descriptions={
+        'threads': 'The number of threads used for computation.',
+    },
+    name='Fastq stats with vsearch.',
+    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
+                'and fastq_eestats2 utilities. Please see '
+                'https://github.com/torognes/vsearch for detailed '
+                'documentation of these tools.',
+)
+
+plugin.visualizers.register_function(
+    function=q2_vsearch._stats.fastq_stats_single,
+    inputs={
+        'sequences': SampleData[SequencesWithQuality],
+    },
+    parameters={
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
+    },
+    input_descriptions={
+        'sequences': 'Fastq single-end sequences'
+    },
+    parameter_descriptions={
+        'threads': 'The number of threads used for computation.',
+    },
+    name='Fastq stats with vsearch.',
+    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
+                'and fastq_eestats2 utilities. Please see '
+                'https://github.com/torognes/vsearch for detailed '
+                'documentation of these tools.',
 )
 
 importlib.import_module('q2_vsearch._transformer')
