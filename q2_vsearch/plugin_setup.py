@@ -443,15 +443,16 @@ plugin.visualizers.register_function(
             1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
     },
     input_descriptions={
-        'sequences': 'Fastq paired-end sequences'
+        'sequences': 'Fastq paired-end sequences',
     },
     parameter_descriptions={
-        'threads': ('The number of threads used for computation. Use 4 or 8 '
-                    'threads to speedup and reduce I/O.')
+        'threads': 'The number of threads used for computation.',
     },
-    name='Fastq file processing with vsearch.',
-    description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
-                 'to get an overview of your forward and reverse sequences.')
+    name='Fastq stats with vsearch.',
+    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
+                'and fastq_eestats2 utilities. Please see '
+                'https://github.com/torognes/vsearch for detailed '
+                'documentation of these tools.',
 )
 
 plugin.visualizers.register_function(
@@ -467,12 +468,13 @@ plugin.visualizers.register_function(
         'sequences': 'Fastq single-end sequences'
     },
     parameter_descriptions={
-        'threads': ('The number of threads used for computation. Use 4 '
-                    'threads to speedup and reduce I/O.')
+        'threads': 'The number of threads used for computation.',
     },
-    name='Fastq file processing with vsearch.',
-    description=('Apply vsearch fastq_stats, fastq_eestats and fastq_eestats2 '
-                 'to get an overview of your sequences.')
+    name='Fastq stats with vsearch.',
+    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
+                'and fastq_eestats2 utilities. Please see '
+                'https://github.com/torognes/vsearch for detailed '
+                'documentation of these tools.',
 )
 
 importlib.import_module('q2_vsearch._transformer')

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2020, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -58,7 +58,7 @@ def _build_cmds(output_dir: str, filelist, direction='forward'):
                 '-', '--output', results]
     datafiles[direction]['eestats2'] = os.path.basename(results)
 
-    return(datafiles, [(filelist, [stats, eestats, eestats2])])
+    return (datafiles, [(filelist, [stats, eestats, eestats2])])
 
 
 def _get_html(output_dir, datafiles):
@@ -71,7 +71,7 @@ def _get_html(output_dir, datafiles):
             data_df = pd.read_csv(filename, sep='\t')
             html[direction][stats_type] = q2templates.df_to_html(data_df,
                                                                  index=False)
-    return(html)
+    return html
 
 
 def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
@@ -118,7 +118,6 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
     html = _get_html(output_dir, datafiles)
 
     index = os.path.join(TEMPLATES, 'index.html')
-    stats_template = os.path.join(TEMPLATES, 'fastq_stats.html')
     eestats_template = os.path.join(TEMPLATES, 'fastq_eestats.html')
     eestats2_template = os.path.join(TEMPLATES, 'fastq_eestats2.html')
     context = {
@@ -126,13 +125,13 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
         'datafiles': datafiles,
         'html': html,
         'tabs': [{'title': 'fastq_stats',
-                  'url': 'fastq_stats.html'},
+                  'url': 'index.html'},
                  {'title': 'fastq_eestats',
                   'url': 'fastq_eestats.html'},
                  {'title': 'fastq_eestats2',
                   'url': 'fastq_eestats2.html'}],
         }
-    templates = [index, stats_template, eestats_template, eestats2_template]
+    templates = [index, eestats_template, eestats2_template]
     q2templates.render(templates, output_dir, context=context)
 
 
