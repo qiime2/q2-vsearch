@@ -117,9 +117,10 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     # feature5   | GGGGGGGGGGGGGGGG
     c.execute('CREATE TABLE rep_seqs (feature_id TEXT PRIMARY KEY, '
               'sequence_string TEXT NOT NULL);')
-    for seq in input_seqs:
-        c.execute('INSERT INTO rep_seqs VALUES (?, ?);', (seq.metadata['id'],
-                                                          str(seq)))
+    c.executemany(
+        'INSERT INTO rep_seqs VALUES (?, ?);',
+        [(seq.metadata['id'], str(seq)) for seq in input_seqs]
+    )
     conn.commit()
     # The results from this query should look like the following (displayed
     # below with dummy data):
@@ -127,25 +128,28 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     # -----------|------------------
     # r1         | ACGTACGTACGTACGT
     # r2         | AAAAAAAAAAAAAAAA
-    c.execute('''SELECT fcm1.cluster_id, rs.sequence_string
+    c.execute('''SELECT fcm1.cluster_id,
+                        (SELECT fcm2.feature_id
+                           FROM feature_cluster_map fcm2
+                          WHERE fcm2.cluster_id=fcm1.cluster_id
+                                AND fcm1.count >= fcm2.count
+                          OR (fcm2.count == fcm1.count
+                              AND fcm2.feature_id <= fcm1.feature_id))
+                        AS xfeature_id,
+                        MAX(fcm1.count),
+                        rs.sequence_string
                    FROM feature_cluster_map fcm1
-        LEFT OUTER JOIN feature_cluster_map fcm2
-                     ON fcm2.cluster_id = fcm1.cluster_id
-                    AND (
-                         fcm2.count > fcm1.count OR
-                         (
-                          -- If the counts are the same, break the tie using
-                          -- the first alphabetically sorted feature_id
-                          fcm2.count = fcm1.count AND
-                          fcm2.feature_id < fcm1.feature_id
-                         )
-                        )
-             INNER JOIN rep_seqs rs USING(feature_id)
-                  WHERE fcm2.count IS NULL;
+             INNER JOIN rep_seqs rs ON rs.feature_id = xfeature_id
+               GROUP BY fcm1.cluster_id;
     ''')
     with open(output_fasta_fp, 'w') as output_seqs:
-        for (id_, seq) in c.fetchall():
-            output_seqs.write('>%s\n%s\n' % (id_, seq))
+        while True:
+            partial_results = c.fetchmany(size=100)
+            if partial_results:
+                seqs = ['>%s\n%s\n' % (i, s) for (i, _, _, s) in partial_results]
+                output_seqs.writelines(seqs)
+            else:
+                break
 
 
 def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
