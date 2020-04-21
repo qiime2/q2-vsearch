@@ -52,10 +52,8 @@ def _uc_to_sqlite(uc):
     # The PK constraint ensures that there are no duplicate Feature IDs
     c.execute('CREATE TABLE feature_cluster_map (feature_id TEXT PRIMARY KEY,'
               'cluster_id TEXT NOT NULL, count INTEGER);')
-    # This index is to help out the LEFT OUTER JOIN below, when grouping
-    # clusters to find their representative sequence.
-    c.execute('CREATE INDEX speed_racer ON '
-              'feature_cluster_map(cluster_id, count);')
+    c.execute('CREATE INDEX idx1 ON '
+              'feature_cluster_map(feature_id, cluster_id);')
     conn.commit()
     insert_stmt = 'INSERT INTO feature_cluster_map VALUES (?, ?, ?);'
 
@@ -122,32 +120,33 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
         [(seq.metadata['id'], str(seq)) for seq in input_seqs]
     )
     conn.commit()
+    # Preemptively sort the table to deal with tie-breaking, later.
+    # This is a table, not a view, because we want/need sqlite's rowid.
+    c.execute('CREATE TABLE sorted_feature_cluster_map AS '
+              'SELECT * FROM feature_cluster_map ORDER BY cluster_id ASC,'
+              'feature_id ASC;')
+    c.execute('CREATE INDEX idx2 ON '
+              'sorted_feature_cluster_map(cluster_id, count);')
+    conn.commit()
     # The results from this query should look like the following (displayed
     # below with dummy data):
     # cluster_id | sequence_string
     # -----------|------------------
     # r1         | ACGTACGTACGTACGT
     # r2         | AAAAAAAAAAAAAAAA
-    c.execute('''SELECT fcm1.cluster_id,
-                        (SELECT fcm2.feature_id
-                           FROM feature_cluster_map fcm2
-                          WHERE fcm2.cluster_id=fcm1.cluster_id
-                                AND fcm1.count >= fcm2.count
-                          OR (fcm2.count == fcm1.count
-                              AND fcm2.feature_id <= fcm1.feature_id))
-                        AS xfeature_id,
-                        MAX(fcm1.count),
-                        rs.sequence_string
-                   FROM feature_cluster_map fcm1
-             INNER JOIN rep_seqs rs ON rs.feature_id = xfeature_id
-               GROUP BY fcm1.cluster_id;
+    c.execute('''SELECT fcm.cluster_id, rs.sequence_string, MAX(fcm.count)
+                   FROM sorted_feature_cluster_map fcm
+             INNER JOIN rep_seqs rs ON rs.feature_id = fcm.feature_id
+               GROUP BY fcm.cluster_id
+               ORDER BY fcm.cluster_id ASC;
     ''')
     with open(output_fasta_fp, 'w') as output_seqs:
         while True:
             partial_results = c.fetchmany(size=100)
             if partial_results:
-                seqs = ['>%s\n%s\n' % (i, s) for (i, _, _, s) in partial_results]
-                output_seqs.writelines(seqs)
+                output_seqs.writelines(
+                    ['>%s\n%s\n' % (i, s) for (i, s, _) in partial_results]
+                )
             else:
                 break
 
