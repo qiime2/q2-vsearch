@@ -14,8 +14,8 @@ import pandas as pd
 from multiprocessing import Pool, cpu_count
 
 from q2_types.per_sample_sequences import (
-    SingleLanePerSampleSingleEndFastqDirFmt,
-    SingleLanePerSamplePairedEndFastqDirFmt)
+    CasavaOneEightSingleLanePerSampleDirFmt
+)
 import q2templates
 
 TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
@@ -74,9 +74,14 @@ def _get_html(output_dir, datafiles):
     return html
 
 
-def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
+def _fastq_stats(output_dir: str, sequences, threads) -> None:
     # read manifest
-    manifest = sequences.manifest.view(pd.DataFrame)
+    manifest = sequences.manifest
+    # check if paired reads available
+    try:
+        paired = manifest['revedrse'][0] is not None
+    except KeyError:
+        paired = False
 
     # get commands and filelist
     datafiles, cmds = _build_cmds(output_dir, manifest['forward'].tolist())
@@ -135,15 +140,8 @@ def _fastq_stats(output_dir: str, sequences, threads, paired=False) -> None:
     q2templates.render(templates, output_dir, context=context)
 
 
-def fastq_stats_paired(output_dir: str,
-                       sequences: SingleLanePerSamplePairedEndFastqDirFmt,
-                       threads: int = 1
-                       ) -> None:
-    _fastq_stats(output_dir, sequences, threads, True)
-
-
-def fastq_stats_single(output_dir: str,
-                       sequences: SingleLanePerSampleSingleEndFastqDirFmt,
-                       threads: int = 1
-                       ) -> None:
+def fastq_stats(output_dir: str,
+                sequences: CasavaOneEightSingleLanePerSampleDirFmt,
+                threads: int = 1
+                ) -> None:
     _fastq_stats(output_dir, sequences, threads)
