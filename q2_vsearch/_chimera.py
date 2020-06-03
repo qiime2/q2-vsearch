@@ -61,7 +61,8 @@ def _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
                    '--db', str(reference_sequences),
                    '--qmask', 'none',  # ensures no lowercase DNA chars
                    '--xsize',
-                   '--threads', str(threads)]
+                   '--threads', str(threads),
+                   '--minseqlength', '1']
             run_command(cmd)
             # this processing step should be removed, pending fix of:
             # https://github.com/qiime2/q2-vsearch/issues/39
@@ -102,7 +103,8 @@ def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
                    '--minh', str(minh),
                    '--xn', str(xn),
                    '--qmask', 'none',  # ensures no lowercase DNA chars
-                   '--xsize']
+                   '--xsize',
+                   '--minseqlength', '1']
             run_command(cmd)
             # this processing step should be removed, pending fix of:
             # https://github.com/qiime2/q2-vsearch/issues/39
