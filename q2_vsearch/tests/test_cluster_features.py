@@ -470,9 +470,9 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         # feature3 is selected as the rep seq because it has a higher count.
         # Similarly, feature2 is selected as the cluster rep seq  because it
         # has a higher count.
-        exp_matched_seqs = [self.input_sequences_list[1],  # feature2
-                            self.input_sequences_list[2]]  # feature3
-        _relabel_seqs(exp_matched_seqs, ['r2', 'r1'])
+        exp_matched_seqs = [self.input_sequences_list[2],  # feature3
+                            self.input_sequences_list[1]]  # feature2
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         # all sequences matched, so unmatched seqs is empty
@@ -844,9 +844,9 @@ class PrivateFunctionTests(TestPluginBase):
 
             obs_seqs = _read_seqs(output_sequences_f.name)
         rep_seqs = _read_seqs(self.input_sequences)
-        exp_seqs = [rep_seqs[1],  # feature2
-                    rep_seqs[2]]  # feature3
-        _relabel_seqs(exp_seqs, ['r2', 'r1'])
+        exp_seqs = [rep_seqs[2],  # feature3
+                    rep_seqs[1]]  # feature2
+        _relabel_seqs(exp_seqs, ['r1', 'r2'])
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_clusters_with_multiple_features_with_same_count(self):
