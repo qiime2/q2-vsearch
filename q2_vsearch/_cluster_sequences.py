@@ -126,7 +126,8 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                '--relabel_sha1', '--relabel_keep',
                '--uc', out_uc.name,
                '--qmask', 'none',
-               '--xsize']
+               '--xsize',
+               '--minseqlength', '1']
         if derep_prefix:
             cmd[1] = '--derep_prefix'
         run_command(cmd)
