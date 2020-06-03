@@ -198,6 +198,28 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         exp_seqs = [self.input_sequences_list[0]]
         self.assertEqual(obs_seqs, exp_seqs)
 
+    def test_short_sequences(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-short.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2]]),
+                                 ['feature1', 'feature2'],
+                                 ['sample1', 'sample2', 'sample3'])
+
+        exp_table = biom.Table(np.array([[1, 2, 5]]),
+                               ['feature1'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, obs_sequences = cluster_features_de_novo(
+                sequences=input_sequences, table=input_table,
+                perc_identity=0.01)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+
     def test_extra_features_in_sequences(self):
         input_table = biom.Table(np.array([[0, 1, 3], [1, 1, 2], [4, 5, 6]]),
                                  ['feature1', 'feature2', 'feature3'],
@@ -477,6 +499,31 @@ class ClusterFeaturesClosedReference(TestPluginBase):
 
         # all sequences matched, so unmatched seqs is empty
         self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
+
+    def test_short_sequences(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-short.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2]]),
+                                 ['feature1', 'feature2'],
+                                 ['sample1', 'sample2', 'sample3'])
+
+        exp_table = biom.Table(np.array([[1, 2, 5]]),
+                               ['r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, matched_seqs, unmatched_seqs = \
+                cluster_features_closed_reference(
+                    sequences=input_sequences, table=input_table,
+                    reference_sequences=self.ref_sequences_1,
+                    perc_identity=0.01)
+
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
 
     def test_extra_features_in_sequences(self):
         input_table = biom.Table(np.array([[0, 1, 3], [1, 1, 2], [4, 5, 6]]),
