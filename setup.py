@@ -31,6 +31,7 @@ setup(
                              'data/seqs-1/*',
                              'data/seqs-2/*',
                              'data/demux-1/*',
+                             'data/demux-1_se/*',
                              'data/stats/*',
                              ]},
     zip_safe=False,
