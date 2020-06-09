@@ -128,7 +128,8 @@ def _join_pairs_w_command_output(
                '--fastq_qminout', str(qminout),
                '--fastq_qmax', str(qmax),
                '--fastq_qmaxout', str(qmaxout),
-               '--minseqlength', '1']
+               '--minseqlength', '1',
+               '--fasta_width', '0']
         if truncqual is not None:
             cmd += ['--fastq_truncqual', str(truncqual)]
         if maxns is not None:
