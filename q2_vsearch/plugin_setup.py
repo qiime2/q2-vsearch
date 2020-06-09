@@ -433,39 +433,19 @@ plugin.methods.register_function(
                  'documentation.')
 )
 
-plugin.visualizers.register_function(
-    function=q2_vsearch._stats.fastq_stats_paired,
-    inputs={
-        'sequences': SampleData[PairedEndSequencesWithQuality],
-    },
-    parameters={
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
-    },
-    input_descriptions={
-        'sequences': 'Fastq paired-end sequences',
-    },
-    parameter_descriptions={
-        'threads': 'The number of threads used for computation.',
-    },
-    name='Fastq stats with vsearch.',
-    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
-                'and fastq_eestats2 utilities. Please see '
-                'https://github.com/torognes/vsearch for detailed '
-                'documentation of these tools.',
-)
 
 plugin.visualizers.register_function(
-    function=q2_vsearch._stats.fastq_stats_single,
+    function=q2_vsearch._stats.fastq_stats,
     inputs={
-        'sequences': SampleData[SequencesWithQuality],
+        'sequences': SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality],
     },
     parameters={
         'threads': qiime2.plugin.Int % qiime2.plugin.Range(
             1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
     },
     input_descriptions={
-        'sequences': 'Fastq single-end sequences'
+        'sequences': 'Fastq sequences'
     },
     parameter_descriptions={
         'threads': 'The number of threads used for computation.',

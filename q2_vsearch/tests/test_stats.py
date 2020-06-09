@@ -11,10 +11,7 @@ import tempfile
 import glob
 
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.per_sample_sequences import (
-    SingleLanePerSamplePairedEndFastqDirFmt)
-
-from q2_vsearch._stats import fastq_stats_single, fastq_stats_paired
+from qiime2 import Artifact
 
 
 class StatsTests(TestPluginBase):
@@ -22,8 +19,13 @@ class StatsTests(TestPluginBase):
 
     def setUp(self):
         super().setUp()
-        self.input_seqs = SingleLanePerSamplePairedEndFastqDirFmt(
-            self.get_data_path('demux-1'), 'r')
+        self.input_seqs_paired = Artifact.import_data(
+            'SampleData[PairedEndSequencesWithQuality]',
+            self.get_data_path('demux-1'))
+        self.input_seqs_single = Artifact.import_data(
+            'SampleData[SequencesWithQuality]',
+            self.get_data_path('demux-1_se'))
+        self.viz = self.plugin.visualizers['fastq_stats']
 
     def _test_fastq_stats(self, paired=False, threads=1):
         default_filelist = ['fastq_stats_forward.txt',
@@ -37,9 +39,12 @@ class StatsTests(TestPluginBase):
 
         with tempfile.TemporaryDirectory() as output_dir:
             if (paired):
-                fastq_stats_paired(output_dir, self.input_seqs, threads)
+                self.input_seqs = self.input_seqs_paired
             else:
-                fastq_stats_single(output_dir, self.input_seqs, threads)
+                self.input_seqs = self.input_seqs_single
+
+            self.result = self.viz(self.input_seqs, threads)
+            self.result.visualization.export_data(output_dir)
 
             pattern = output_dir + '/*.txt'
             filelist = [os.path.basename(x) for x in glob.glob(pattern)]
