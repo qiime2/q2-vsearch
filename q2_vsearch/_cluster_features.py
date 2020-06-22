@@ -193,7 +193,8 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                    '--qmask', 'none',  # ensures no lowercase DNA chars
                    '--xsize',
                    '--threads', str(threads),
-                   '--minseqlength', '1']
+                   '--minseqlength', '1',
+                   '--fasta_width', '0']
             run_command(cmd)
             out_uc.seek(0)
 
@@ -257,7 +258,8 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                '--qmask', 'none',  # ensures no lowercase DNA chars
                '--notmatched', tmp_unmatched_seqs.name,
                '--threads', str(threads),
-               '--minseqlength', '1']
+               '--minseqlength', '1',
+               '--fasta_width', '0']
         run_command(cmd)
         out_uc.seek(0)
 
@@ -273,7 +275,8 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                    '--sortbysize', tmp_unmatched_seqs.name,
                    '--xsize',
                    '--output', str(unmatched_seqs),
-                   '--minseqlength', '1']
+                   '--minseqlength', '1',
+                   '--fasta_width', '0']
             run_command(cmd)
 
         try:
