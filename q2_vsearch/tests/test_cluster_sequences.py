@@ -50,15 +50,15 @@ class DereplicateSequences(TestPluginBase):
         exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
                               metadata={'id': ('4574b947a0159c0da35a1f30f'
                                                '989681a1d9f64ef'),
-                                        'description': 'sample1_1'}),
+                                        'description': ''}),
                     skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
                               metadata={'id': ('16a1263bde4f2f99422630d1bb'
                                                '87935c4236d1ba'),
-                                        'description': 's2_42'}),
+                                        'description': ''}),
                     skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTA',
                               metadata={'id': ('1768cf7fca79f84d651b34d878d'
                                                'e2492c6a7b971'),
-                                        'description': 's2_2'})]
+                                        'description': ''})]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_dereplicate_sequences_underscores_in_ids(self):
@@ -88,15 +88,15 @@ class DereplicateSequences(TestPluginBase):
         exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
                               metadata={'id': ('4574b947a0159c0da35a1f30f'
                                                '989681a1d9f64ef'),
-                                        'description': 'sa_mple1_1'}),
+                                        'description': ''}),
                     skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
                               metadata={'id': ('16a1263bde4f2f99422630d1bb'
                                                '87935c4236d1ba'),
-                                        'description': 's2_42'}),
+                                        'description': ''}),
                     skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTA',
                               metadata={'id': ('1768cf7fca79f84d651b34d878d'
                                                'e2492c6a7b971'),
-                                        'description': 's2_2'})]
+                                        'description': ''})]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_dereplicate_sequences_prefix(self):
@@ -124,11 +124,11 @@ class DereplicateSequences(TestPluginBase):
         exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
                               metadata={'id': ('4574b947a0159c0da35a1f30f'
                                                '989681a1d9f64ef'),
-                                        'description': 's2_1'}),
+                                        'description': ''}),
                     skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
                               metadata={'id': ('16a1263bde4f2f99422630d1bb'
                                                '87935c4236d1ba'),
-                                        'description': 's2_42'})]
+                                        'description': ''})]
         self.assertEqual(obs_seqs, exp_seqs)
 
 

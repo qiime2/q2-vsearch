@@ -139,4 +139,15 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                                      constructor=skbio.DNA,
                                      format='fasta')}
     table.update_ids(id_map=id_map, axis='observation')
+
+    # Remove sample-id from sequence table
+    lines = '\n' + ''.join([line for line in dereplicated_sequences.open()])
+    fixed_lines = '\n'
+    for line in lines.split('\n'):
+        line = line.split(' ')[0]
+        fixed_lines = fixed_lines + line + '\n'
+
+    with open(str(dereplicated_sequences), 'w') as fh:
+        fh.write(fixed_lines)
+
     return table, dereplicated_sequences
