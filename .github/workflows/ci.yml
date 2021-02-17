@@ -51,4 +51,4 @@ jobs:
       with:
         package-name: q2-vsearch
         build-target: staging
-        additional-tests: py.test --pyargs q2_vsearch --capture=tee-sys
+        additional-tests: py.test --pyargs q2_vsearch
