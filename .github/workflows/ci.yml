@@ -52,3 +52,4 @@ jobs:
         package-name: q2-vsearch
         build-target: staging
         additional-tests: py.test --pyargs q2_vsearch
+        library-token: ${{ secrets.LIBRARY_TOKEN }}
