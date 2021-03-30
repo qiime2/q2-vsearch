@@ -90,7 +90,8 @@ def _join_pairs_w_command_output(
 
     phred_offset = yaml.load(open(
         os.path.join(str(demultiplexed_seqs),
-                     demultiplexed_seqs.metadata.pathspec)))['phred-offset']
+                     demultiplexed_seqs.metadata.pathspec)),
+                            Loader=yaml.SafeLoader)['phred-offset']
 
     id_to_fps = manifest.pivot(index='sample-id', columns='direction',
                                values='filename')
