@@ -9,14 +9,14 @@
 import os
 import skbio
 import biom
+from biom.parse import parse_uc
 import numpy as np
 
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.util import redirected_stdio
 from q2_types.per_sample_sequences import QIIME1DemuxDirFmt
 
-from q2_vsearch._cluster_sequences import (dereplicate_sequences,
-                                           _parse_uc)
+from q2_vsearch._cluster_sequences import dereplicate_sequences
 
 
 class DereplicateSequences(TestPluginBase):
@@ -145,7 +145,7 @@ class ParseUc(TestPluginBase):
     def test_empty(self):
         """ empty uc file returns empty Table
         """
-        actual = _parse_uc(uc_empty.split('\n'))
+        actual = parse_uc(uc_empty.split('\n'))
         expected = biom.Table(np.array([[]]),
                               observation_ids=[],
                               sample_ids=[])
@@ -154,7 +154,7 @@ class ParseUc(TestPluginBase):
     def test_minimal(self):
         """ single new seed observed
         """
-        actual = _parse_uc(uc_minimal.split('\n'))
+        actual = parse_uc(uc_minimal.split('\n'))
         expected = biom.Table(np.array([[1.0]]),
                               observation_ids=['f2_1539'],
                               sample_ids=['f2'])
@@ -163,7 +163,7 @@ class ParseUc(TestPluginBase):
     def test_lib_minimal(self):
         """ single library seed observed
         """
-        actual = _parse_uc(uc_lib_minimal.split('\n'))
+        actual = parse_uc(uc_lib_minimal.split('\n'))
         expected = biom.Table(np.array([[1.0]]),
                               observation_ids=['295053'],
                               sample_ids=['f2'])
@@ -172,12 +172,12 @@ class ParseUc(TestPluginBase):
     def test_invalid(self):
         """ invalid query sequence identifier detected
         """
-        self.assertRaises(ValueError, _parse_uc, uc_invalid_id.split('\n'))
+        self.assertRaises(ValueError, parse_uc, uc_invalid_id.split('\n'))
 
     def test_seed_hits(self):
         """ multiple new seeds observed
         """
-        actual = _parse_uc(uc_seed_hits.split('\n'))
+        actual = parse_uc(uc_seed_hits.split('\n'))
         expected = biom.Table(np.array([[2.0, 1.0], [0.0, 1.0]]),
                               observation_ids=['f2_1539', 'f3_44'],
                               sample_ids=['f2', 'f3'])
@@ -186,7 +186,7 @@ class ParseUc(TestPluginBase):
     def test_mixed_hits(self):
         """ new and library seeds observed
         """
-        actual = _parse_uc(uc_mixed_hits.split('\n'))
+        actual = parse_uc(uc_mixed_hits.split('\n'))
         expected = biom.Table(np.array([[2.0, 1.0], [0.0, 1.0], [1.0, 0.0]]),
                               observation_ids=['f2_1539', 'f3_44', '295053'],
                               sample_ids=['f2', 'f3'])
@@ -197,7 +197,7 @@ class ParseUc(TestPluginBase):
     def test_underscore_in_sample_id(self):
         """ single new seed observed for sample with underscores in id
         """
-        actual = _parse_uc(uc_minimal_w_underscores.split('\n'))
+        actual = parse_uc(uc_minimal_w_underscores.split('\n'))
         expected = biom.Table(np.array([[1.0]]),
                               observation_ids=['sample_id_w_underscores_42'],
                               sample_ids=['sample_id_w_underscores'])
@@ -208,7 +208,7 @@ class ParseUc(TestPluginBase):
     def test_uc_w_comments_and_blank_lines(self):
         """ uc contains comments and blank lines
         """
-        actual = _parse_uc(uc_w_comments_and_blank_lines.split('\n'))
+        actual = parse_uc(uc_w_comments_and_blank_lines.split('\n'))
         expected = biom.Table(np.array([[1.0]]),
                               observation_ids=['f2_1539'],
                               sample_ids=['f2'])
