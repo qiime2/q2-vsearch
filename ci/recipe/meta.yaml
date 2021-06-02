@@ -28,3 +28,13 @@ requirements:
     - qiime2 {{ release }}.*
     - q2-types {{ release }}.*
     - q2-feature-table {{ release }}.*
+
+test:
+  imports:
+    - q2_vsearch
+    - qiime2.plugins.vsearch
+
+about:
+  home: https://qiime2.org
+  license: BSD-3-Clause
+  license_family: BSD
