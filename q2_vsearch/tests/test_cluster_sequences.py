@@ -9,7 +9,6 @@
 import os
 import skbio
 import biom
-from biom.parse import parse_uc
 import numpy as np
 
 from qiime2.plugin.testing import TestPluginBase
@@ -130,6 +129,7 @@ class DereplicateSequences(TestPluginBase):
                                                '87935c4236d1ba'),
                                         'description': 's2_42'})]
         self.assertEqual(obs_seqs, exp_seqs)
+
 
 # no hits or library seeds
 uc_empty = """
