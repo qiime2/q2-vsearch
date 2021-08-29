@@ -25,11 +25,14 @@ requirements:
     - numpy
     - pandas
     - pyyaml
-    - qiime2 {{ release }}.*
-    - q2-types {{ release }}.*
-    - q2-feature-table {{ release }}.*
+    - qiime2 {{ qiime2 }}
+    - q2-types {{ q2_types }}
+    - q2-feature-table {{ q2_feature_table }}
 
 test:
+  requires:
+    - pytest
+
   imports:
     - q2_vsearch
     - qiime2.plugins.vsearch
