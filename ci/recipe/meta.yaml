@@ -20,7 +20,7 @@ requirements:
     - python {{ python }}
     - vsearch 2.7.0
     - scikit-bio {{ scikit_bio }}
-    - biom-format >=2.1.10,<2.2.0
+    - biom-format {{ biom_format }}
     - numpy
     - pandas {{ pandas }}
     - pyyaml
