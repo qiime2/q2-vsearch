@@ -19,10 +19,10 @@ requirements:
   run:
     - python {{ python }}
     - vsearch 2.7.0
-    - scikit-bio
-    - biom-format >=2.1.10,<2.2.0
+    - scikit-bio {{ scikit_bio }}
+    - biom-format {{ biom_format }}
     - numpy
-    - pandas
+    - pandas {{ pandas }}
     - pyyaml
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types {{ qiime2_epoch }}.*
