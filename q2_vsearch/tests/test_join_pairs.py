@@ -258,32 +258,6 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxee 25.0' in ' '.join(cmd))
 
-    def test_join_pairs_alt_qmax(self):
-        with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qmax=40)
-
-        # sanity check the output
-        self._test_manifest(obs)
-        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
-        self.assertEqual(len(output_fastqs), 3)
-
-        # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qmax 40' in ' '.join(cmd))
-
-    def test_join_pairs_alt_qmaxout(self):
-        with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qmaxout=40)
-
-        # sanity check the output
-        self._test_manifest(obs)
-        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
-        self.assertEqual(len(output_fastqs), 3)
-
-        # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qmaxout 40' in ' '.join(cmd))
-
     def test_join_pairs_alt_threads(self):
         with redirected_stdio(stderr=os.devnull):
             cmd, obs = _join_pairs_w_command_output(

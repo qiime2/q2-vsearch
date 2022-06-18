@@ -29,8 +29,6 @@ _jp_defaults = {
     'minmergelen': None,
     'maxmergelen': None,
     'maxee': None,
-    'qmax': 41,
-    'qmaxout': 41,
     'threads': 1
 }
 
@@ -45,14 +43,11 @@ def join_pairs(demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
                minmergelen: int = _jp_defaults['minmergelen'],
                maxmergelen: int = _jp_defaults['maxmergelen'],
                maxee: float = _jp_defaults['maxee'],
-               qmax: int = _jp_defaults['qmax'],
-               qmaxout: int = _jp_defaults['qmaxout'],
                threads: int = _jp_defaults['threads'],
                ) -> SingleLanePerSampleSingleEndFastqDirFmt:
     _, result = _join_pairs_w_command_output(
         demultiplexed_seqs, truncqual, minlen, maxns, allowmergestagger,
-        minovlen, maxdiffs, minmergelen, maxmergelen, maxee, qmax, qmaxout,
-        threads)
+        minovlen, maxdiffs, minmergelen, maxmergelen, maxee, threads)
     return result
 
 
@@ -67,8 +62,6 @@ def _join_pairs_w_command_output(
         minmergelen: int = _jp_defaults['minmergelen'],
         maxmergelen: int = _jp_defaults['maxmergelen'],
         maxee: float = _jp_defaults['maxee'],
-        qmax: int = _jp_defaults['qmax'],
-        qmaxout: int = _jp_defaults['qmaxout'],
         threads: int = _jp_defaults['threads'],
         ) -> (List[str], SingleLanePerSampleSingleEndFastqDirFmt):
     # this function exists only to simplify unit testing
@@ -119,8 +112,6 @@ def _join_pairs_w_command_output(
                '--fastq_minlen', str(minlen),
                '--fastq_minovlen', str(minovlen),
                '--fastq_maxdiffs', str(maxdiffs),
-               '--fastq_qmax', str(qmax),
-               '--fastq_qmaxout', str(qmaxout),
                '--fasta_width', '0']
         if truncqual is not None:
             cmd += ['--fastq_truncqual', str(truncqual)]

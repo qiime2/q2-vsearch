@@ -279,10 +279,6 @@ plugin.methods.register_function(
         'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxee': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
-        'qmax': qiime2.plugin.Int % qiime2.plugin.Range(
-            40, 41, inclusive_start=True, inclusive_end=True),
-        'qmaxout': qiime2.plugin.Int % qiime2.plugin.Range(
-            40, 41, inclusive_start=True, inclusive_end=True),
         'threads': qiime2.plugin.Int % qiime2.plugin.Range(
             0, 8, inclusive_start=True, inclusive_end=True)
     },
@@ -309,8 +305,6 @@ plugin.methods.register_function(
         'maxmergelen': ('Maximum length of the joined read to be retained.'),
         'maxee': ('Maximum number of expected errors in the joined read '
                   'to be retained.'),
-        'qmax': ('The maximum allowed quality score in the input.'),
-        'qmaxout': ('The maximum allowed quality score to use in output.'),
         'threads': ('The number of threads to use for computation. Does '
                     'not scale much past 4 threads.')
     },
