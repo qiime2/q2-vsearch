@@ -279,10 +279,6 @@ plugin.methods.register_function(
         'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxee': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
-        'qmin': qiime2.plugin.Int % qiime2.plugin.Range(
-            -5, 2, inclusive_start=True, inclusive_end=True),
-        'qminout': qiime2.plugin.Int % qiime2.plugin.Range(
-            -5, 2, inclusive_start=True, inclusive_end=True),
         'qmax': qiime2.plugin.Int % qiime2.plugin.Range(
             40, 41, inclusive_start=True, inclusive_end=True),
         'qmaxout': qiime2.plugin.Int % qiime2.plugin.Range(
@@ -313,8 +309,6 @@ plugin.methods.register_function(
         'maxmergelen': ('Maximum length of the joined read to be retained.'),
         'maxee': ('Maximum number of expected errors in the joined read '
                   'to be retained.'),
-        'qmin': ('The minimum allowed quality score in the input.'),
-        'qminout': ('The minimum allowed quality score to use in output.'),
         'qmax': ('The maximum allowed quality score in the input.'),
         'qmaxout': ('The maximum allowed quality score to use in output.'),
         'threads': ('The number of threads to use for computation. Does '
@@ -325,12 +319,9 @@ plugin.methods.register_function(
     },
     name='Join paired-end reads.',
     description=('Join paired-end sequence reads using vsearch\'s '
-                 'merge_pairs function. The qmin, qminout, qmax, and qmaxout '
-                 'parameters should only need to be modified when working '
-                 'with older fastq sequence data. See the vsearch '
-                 'documentation for details on how paired-end joining is '
-                 'performed, and for more information on the parameters to '
-                 'this method.')
+                 'merge_pairs function. See the vsearch documentation for '
+                 'details on how paired-end joining is performed, and for '
+                 'more information on the parameters to this method.')
 )
 
 plugin.methods.register_function(
