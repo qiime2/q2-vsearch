@@ -112,6 +112,10 @@ def _join_pairs_w_command_output(
                '--fastq_minlen', str(minlen),
                '--fastq_minovlen', str(minovlen),
                '--fastq_maxdiffs', str(maxdiffs),
+               '--fastq_qmin', '0',
+               '--fastq_qminout', '0',
+               '--fastq_qmax', '41',
+               '--fastq_qmaxout', '41',
                '--fasta_width', '0']
         if truncqual is not None:
             cmd += ['--fastq_truncqual', str(truncqual)]
