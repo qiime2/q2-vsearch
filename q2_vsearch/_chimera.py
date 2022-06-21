@@ -60,7 +60,6 @@ def _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
                '--qmask', 'none',  # ensures no lowercase DNA chars
                '--xsize',
                '--threads', str(threads),
-               '--minseqlength', '1',
                '--fasta_width', '0']
         run_command(cmd)
 
@@ -99,7 +98,6 @@ def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
                '--xn', str(xn),
                '--qmask', 'none',  # ensures no lowercase DNA chars
                '--xsize',
-               '--minseqlength', '1',
                '--fasta_width', '0']
         run_command(cmd)
 

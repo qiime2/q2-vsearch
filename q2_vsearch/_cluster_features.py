@@ -69,7 +69,10 @@ def _uc_to_sqlite(uc):
             elif fields[0] == b'H':
                 centroid_id = fields[9].decode('utf-8').split(';')[0]
                 sequence_id = fields[8].decode('utf-8').split(';size=')
-                sequence_id, count = sequence_id[0], sequence_id[1]
+                if len(sequence_id) == 2:
+                    sequence_id, count = sequence_id[0], sequence_id[1]
+                else:
+                    sequence_id, count = sequence_id[0], '1'
                 c.execute(insert_stmt, (sequence_id, centroid_id, count))
             else:
                 pass

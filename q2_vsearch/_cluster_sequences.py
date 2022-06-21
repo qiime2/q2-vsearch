@@ -28,7 +28,6 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                '--output', str(dereplicated_sequences),
                '--relabel_sha1', '--relabel_keep',
                '--uc', out_uc.name,
-               '--qmask', 'none',
                '--xsize',
                '--minseqlength', '1',
                '--fasta_width', '0']
