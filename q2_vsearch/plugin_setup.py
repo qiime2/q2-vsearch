@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -13,6 +13,8 @@ import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
 import q2_vsearch._join_pairs
 import q2_vsearch._chimera
+import q2_vsearch._stats
+
 from q2_vsearch._type import UchimeStats
 from q2_vsearch._format import UchimeStatsFmt, UchimeStatsDirFmt
 from q2_types.feature_data import FeatureData, Sequence
@@ -277,14 +279,8 @@ plugin.methods.register_function(
         'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxee': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
-        'qmin': qiime2.plugin.Int % qiime2.plugin.Range(
-            -5, 2, inclusive_start=True, inclusive_end=True),
-        'qminout': qiime2.plugin.Int % qiime2.plugin.Range(
-            -5, 2, inclusive_start=True, inclusive_end=True),
-        'qmax': qiime2.plugin.Int % qiime2.plugin.Range(
-            40, 41, inclusive_start=True, inclusive_end=True),
-        'qmaxout': qiime2.plugin.Int % qiime2.plugin.Range(
-            40, 41, inclusive_start=True, inclusive_end=True),
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+            0, 8, inclusive_start=True, inclusive_end=True)
     },
     outputs=[
         ('joined_sequences', SampleData[JoinedSequencesWithQuality])
@@ -309,22 +305,17 @@ plugin.methods.register_function(
         'maxmergelen': ('Maximum length of the joined read to be retained.'),
         'maxee': ('Maximum number of expected errors in the joined read '
                   'to be retained.'),
-        'qmin': ('The minimum allowed quality score in the input.'),
-        'qminout': ('The minimum allowed quality score to use in output.'),
-        'qmax': ('The maximum allowed quality score in the input.'),
-        'qmaxout': ('The maximum allowed quality score to use in output.'),
+        'threads': ('The number of threads to use for computation. Does '
+                    'not scale much past 4 threads.')
     },
     output_descriptions={
         'joined_sequences': ('The joined sequences.'),
     },
     name='Join paired-end reads.',
     description=('Join paired-end sequence reads using vsearch\'s '
-                 'merge_pairs function. The qmin, qminout, qmax, and qmaxout '
-                 'parameters should only need to be modified when working '
-                 'with older fastq sequence data. See the vsearch '
-                 'documentation for details on how paired-end joining is '
-                 'performed, and for more information on the parameters to '
-                 'this method.')
+                 'merge_pairs function. See the vsearch documentation for '
+                 'details on how paired-end joining is performed, and for '
+                 'more information on the parameters to this method.')
 )
 
 plugin.methods.register_function(
@@ -425,6 +416,30 @@ plugin.methods.register_function(
                  'to filter chimeric features from the corresponding feature '
                  'table. For additional details, please refer to the vsearch '
                  'documentation.')
+)
+
+
+plugin.visualizers.register_function(
+    function=q2_vsearch._stats.fastq_stats,
+    inputs={
+        'sequences': SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality],
+    },
+    parameters={
+        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
+            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
+    },
+    input_descriptions={
+        'sequences': 'Fastq sequences'
+    },
+    parameter_descriptions={
+        'threads': 'The number of threads used for computation.',
+    },
+    name='Fastq stats with vsearch.',
+    description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
+                'and fastq_eestats2 utilities. Please see '
+                'https://github.com/torognes/vsearch for detailed '
+                'documentation of these tools.',
 )
 
 importlib.import_module('q2_vsearch._transformer')

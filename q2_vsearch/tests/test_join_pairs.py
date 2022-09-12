@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -258,10 +258,10 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxee 25.0' in ' '.join(cmd))
 
-    def test_join_pairs_alt_qmin(self):
+    def test_join_pairs_alt_threads(self):
         with redirected_stdio(stderr=os.devnull):
             cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qmin=-1)
+                self.input_seqs, threads=2)
 
         # sanity check the output
         self._test_manifest(obs)
@@ -269,43 +269,4 @@ class MergePairsTests(TestPluginBase):
         self.assertEqual(len(output_fastqs), 3)
 
         # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qmin -1' in ' '.join(cmd))
-
-    def test_join_pairs_alt_qminout(self):
-        with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qminout=-1)
-
-        # sanity check the output
-        self._test_manifest(obs)
-        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
-        self.assertEqual(len(output_fastqs), 3)
-
-        # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qminout -1' in ' '.join(cmd))
-
-    def test_join_pairs_alt_qmax(self):
-        with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qmax=40)
-
-        # sanity check the output
-        self._test_manifest(obs)
-        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
-        self.assertEqual(len(output_fastqs), 3)
-
-        # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qmax 40' in ' '.join(cmd))
-
-    def test_join_pairs_alt_qmaxout(self):
-        with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
-                self.input_seqs, qmaxout=40)
-
-        # sanity check the output
-        self._test_manifest(obs)
-        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
-        self.assertEqual(len(output_fastqs), 3)
-
-        # confirm altered parameter was passed to vsearch
-        self.assertTrue('--fastq_qmaxout 40' in ' '.join(cmd))
+        self.assertTrue('--threads 2' in ' '.join(cmd))

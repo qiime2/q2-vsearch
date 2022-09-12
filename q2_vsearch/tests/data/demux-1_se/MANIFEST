@@ -1,0 +1,4 @@
+sample-id,filename,direction
+BAQ4697.2,BAQ4697.2_1_L001_R1_001.fastq.gz,forward
+BAQ3473.2,BAQ3473.2_2_L001_R1_001.fastq.gz,forward
+BAQ2687.1,BAQ2687.1_3_L001_R1_001.fastq.gz,forward

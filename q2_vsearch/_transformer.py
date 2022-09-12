@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -20,23 +20,23 @@ from ._format import UchimeStatsFmt
 # score strings
 _uchime_stats_header = collections.OrderedDict([
      ('score', np.number),
-     ('feature-id', np.str),
-     ('A', np.str),
-     ('B', np.str),
-     ('T', np.str),
-     ('idQM', np.str),
-     ('idQA', np.str),
-     ('idQB', np.str),
-     ('idAB', np.str),
-     ('idQT', np.str),
-     ('LY', np.str),
-     ('LN', np.str),
-     ('LA', np.str),
-     ('RY', np.str),
-     ('RN', np.str),
-     ('RA', np.str),
-     ('div', np.str),
-     ('YN', np.str)])
+     ('feature-id', str),
+     ('A', str),
+     ('B', str),
+     ('T', str),
+     ('idQM', str),
+     ('idQA', str),
+     ('idQB', str),
+     ('idAB', str),
+     ('idQT', str),
+     ('LY', str),
+     ('LN', str),
+     ('LA', str),
+     ('RY', str),
+     ('RN', str),
+     ('RA', str),
+     ('div', str),
+     ('YN', str)])
 
 
 def _stats_to_df(ff):

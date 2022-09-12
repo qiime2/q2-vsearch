@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -197,6 +197,28 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         obs_seqs = _read_seqs(obs_sequences)
         exp_seqs = [self.input_sequences_list[0]]
         self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_short_sequences(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-short.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2]]),
+                                 ['feature1', 'feature2'],
+                                 ['sample1', 'sample2', 'sample3'])
+
+        exp_table = biom.Table(np.array([[1, 2, 5]]),
+                               ['feature1'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, obs_sequences = cluster_features_de_novo(
+                sequences=input_sequences, table=input_table,
+                perc_identity=0.01)
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
 
     def test_extra_features_in_sequences(self):
         input_table = biom.Table(np.array([[0, 1, 3], [1, 1, 2], [4, 5, 6]]),
@@ -470,13 +492,38 @@ class ClusterFeaturesClosedReference(TestPluginBase):
         # feature3 is selected as the rep seq because it has a higher count.
         # Similarly, feature2 is selected as the cluster rep seq  because it
         # has a higher count.
-        exp_matched_seqs = [self.input_sequences_list[1],  # feature2
-                            self.input_sequences_list[2]]  # feature3
-        _relabel_seqs(exp_matched_seqs, ['r2', 'r1'])
+        exp_matched_seqs = [self.input_sequences_list[2],  # feature3
+                            self.input_sequences_list[1]]  # feature2
+        _relabel_seqs(exp_matched_seqs, ['r1', 'r2'])
         self.assertEqual(obs_matched_seqs, exp_matched_seqs)
 
         # all sequences matched, so unmatched seqs is empty
         self.assertEqual(os.path.getsize(str(unmatched_seqs)), 0)
+
+    def test_short_sequences(self):
+        input_sequences_fp = self.get_data_path('dna-sequences-short.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        input_table = biom.Table(np.array([[0, 1, 3],
+                                           [1, 1, 2]]),
+                                 ['feature1', 'feature2'],
+                                 ['sample1', 'sample2', 'sample3'])
+
+        exp_table = biom.Table(np.array([[1, 2, 5]]),
+                               ['r2'],
+                               ['sample1', 'sample2', 'sample3'])
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, matched_seqs, unmatched_seqs = \
+                cluster_features_closed_reference(
+                    sequences=input_sequences, table=input_table,
+                    reference_sequences=self.ref_sequences_1,
+                    perc_identity=0.01)
+
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
 
     def test_extra_features_in_sequences(self):
         input_table = biom.Table(np.array([[0, 1, 3], [1, 1, 2], [4, 5, 6]]),
@@ -844,9 +891,9 @@ class PrivateFunctionTests(TestPluginBase):
 
             obs_seqs = _read_seqs(output_sequences_f.name)
         rep_seqs = _read_seqs(self.input_sequences)
-        exp_seqs = [rep_seqs[1],  # feature2
-                    rep_seqs[2]]  # feature3
-        _relabel_seqs(exp_seqs, ['r2', 'r1'])
+        exp_seqs = [rep_seqs[2],  # feature3
+                    rep_seqs[1]]  # feature2
+        _relabel_seqs(exp_seqs, ['r1', 'r2'])
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_clusters_with_multiple_features_with_same_count(self):

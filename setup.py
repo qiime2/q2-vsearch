@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -25,11 +25,14 @@ setup(
         ["q2-vsearch=q2_vsearch.plugin_setup:plugin"]
     },
     package_data={
-        'q2_vsearch': ['citations.bib'],
+        'q2_vsearch': ['assets/*.html',
+                       'citations.bib'],
         'q2_vsearch.tests': ['data/*',
                              'data/seqs-1/*',
                              'data/seqs-2/*',
                              'data/demux-1/*',
+                             'data/demux-1_se/*',
+                             'data/stats/*',
                              ]},
     zip_safe=False,
     )

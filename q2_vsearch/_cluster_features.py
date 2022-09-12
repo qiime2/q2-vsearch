@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -54,10 +54,8 @@ def _uc_to_sqlite(uc):
     # The PK constraint ensures that there are no duplicate Feature IDs
     c.execute('CREATE TABLE feature_cluster_map (feature_id TEXT PRIMARY KEY,'
               'cluster_id TEXT NOT NULL, count INTEGER);')
-    # This index is to help out the LEFT OUTER JOIN below, when grouping
-    # clusters to find their representative sequence.
-    c.execute('CREATE INDEX speed_racer ON '
-              'feature_cluster_map(cluster_id, count);')
+    c.execute('CREATE INDEX idx1 ON '
+              'feature_cluster_map(feature_id, cluster_id);')
     conn.commit()
     insert_stmt = 'INSERT INTO feature_cluster_map VALUES (?, ?, ?);'
 
@@ -73,7 +71,10 @@ def _uc_to_sqlite(uc):
             elif fields[0] == b'H':
                 centroid_id = fields[9].decode('utf-8').split(';')[0]
                 sequence_id = fields[8].decode('utf-8').split(';size=')
-                sequence_id, count = sequence_id[0], sequence_id[1]
+                if len(sequence_id) == 2:
+                    sequence_id, count = sequence_id[0], sequence_id[1]
+                else:
+                    sequence_id, count = sequence_id[0], '1'
                 c.execute(insert_stmt, (sequence_id, centroid_id, count))
             else:
                 pass
@@ -119,9 +120,18 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     # feature5   | GGGGGGGGGGGGGGGG
     c.execute('CREATE TABLE rep_seqs (feature_id TEXT PRIMARY KEY, '
               'sequence_string TEXT NOT NULL);')
-    for seq in input_seqs:
-        c.execute('INSERT INTO rep_seqs VALUES (?, ?);', (seq.metadata['id'],
-                                                          str(seq)))
+    c.executemany(
+        'INSERT INTO rep_seqs VALUES (?, ?);',
+        [(seq.metadata['id'], str(seq)) for seq in input_seqs]
+    )
+    conn.commit()
+    # Preemptively sort the table to deal with tie-breaking, later.
+    # This is a table, not a view, because we want/need sqlite's rowid.
+    c.execute('CREATE TABLE sorted_feature_cluster_map AS '
+              'SELECT * FROM feature_cluster_map ORDER BY cluster_id ASC,'
+              'feature_id ASC;')
+    c.execute('CREATE INDEX idx2 ON '
+              'sorted_feature_cluster_map(cluster_id, count);')
     conn.commit()
     # The results from this query should look like the following (displayed
     # below with dummy data):
@@ -129,25 +139,21 @@ def _fasta_from_sqlite(conn, input_fasta_fp, output_fasta_fp):
     # -----------|------------------
     # r1         | ACGTACGTACGTACGT
     # r2         | AAAAAAAAAAAAAAAA
-    c.execute('''SELECT fcm1.cluster_id, rs.sequence_string
-                   FROM feature_cluster_map fcm1
-        LEFT OUTER JOIN feature_cluster_map fcm2
-                     ON fcm2.cluster_id = fcm1.cluster_id
-                    AND (
-                         fcm2.count > fcm1.count OR
-                         (
-                          -- If the counts are the same, break the tie using
-                          -- the first alphabetically sorted feature_id
-                          fcm2.count = fcm1.count AND
-                          fcm2.feature_id < fcm1.feature_id
-                         )
-                        )
-             INNER JOIN rep_seqs rs USING(feature_id)
-                  WHERE fcm2.count IS NULL;
+    c.execute('''SELECT fcm.cluster_id, rs.sequence_string, MAX(fcm.count)
+                   FROM sorted_feature_cluster_map fcm
+             INNER JOIN rep_seqs rs ON rs.feature_id = fcm.feature_id
+               GROUP BY fcm.cluster_id
+               ORDER BY fcm.cluster_id ASC;
     ''')
     with open(output_fasta_fp, 'w') as output_seqs:
-        for (id_, seq) in c.fetchall():
-            output_seqs.write('>%s\n%s\n' % (id_, seq))
+        while True:
+            partial_results = c.fetchmany(size=100)
+            if partial_results:
+                output_seqs.writelines(
+                    ['>%s\n%s\n' % (i, s) for (i, s, _) in partial_results]
+                )
+            else:
+                break
 
 
 def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
@@ -191,7 +197,9 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                    '--uc', out_uc.name,
                    '--qmask', 'none',  # ensures no lowercase DNA chars
                    '--xsize',
-                   '--threads', str(threads)]
+                   '--threads', str(threads),
+                   '--minseqlength', '1',
+                   '--fasta_width', '0']
             run_command(cmd)
             out_uc.seek(0)
 
@@ -254,7 +262,9 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
                '--strand', str(strand),
                '--qmask', 'none',  # ensures no lowercase DNA chars
                '--notmatched', tmp_unmatched_seqs.name,
-               '--threads', str(threads)]
+               '--threads', str(threads),
+               '--minseqlength', '1',
+               '--fasta_width', '0']
         run_command(cmd)
         out_uc.seek(0)
 
@@ -269,7 +279,9 @@ def cluster_features_closed_reference(sequences: DNAFASTAFormat,
             cmd = ['vsearch',
                    '--sortbysize', tmp_unmatched_seqs.name,
                    '--xsize',
-                   '--output', str(unmatched_seqs)]
+                   '--output', str(unmatched_seqs),
+                   '--minseqlength', '1',
+                   '--fasta_width', '0']
             run_command(cmd)
 
         try:
