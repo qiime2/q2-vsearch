@@ -32,7 +32,7 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                '--relabel_keep',
                '--uc', out_uc.name,
                '--xsize',
-               '--minseqlength', min_seq_length,
+               '--minseqlength', str(min_seq_length),
                '--fasta_width', '0']
         if hashed_feature_ids:
             cmd[5] = '--relabel_sha1 --relabel_keep'
