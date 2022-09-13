@@ -253,10 +253,11 @@ plugin.methods.register_function(
                          'with the most abundant.'),
         'hashed_feature_ids': ('If true, the feature ids in the resulting '
                                'table will be presented as hashes of the '
-                               'sequences defining each feature. The hash will'
-                               'always be the same for the same sequence so '
-                               'this allows feature tables to be merged '
-                               'across runs of this method.'),
+                               'sequences defining each feature, prior to the'
+                               'origional sequence ID. The hash will always '
+                               'be the same for the same sequence so this '
+                               'allows feature tables to be merged across '
+                               'runs of this method.'),
         'min_seq_length': ('Discard sequences of length smaller than this'
                            'integer.'),
     },
