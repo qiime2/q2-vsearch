@@ -95,41 +95,6 @@ class DereplicateSequences(TestPluginBase):
                           'description': 's2_42'})]
         self.assertEqual(obs_seqs, exp_seqs)
 
-    def test_dereplicate_sequences_no_hash(self):
-        input_sequences_fp = self.get_data_path('seqs-1')
-        input_sequences = QIIME1DemuxDirFmt(input_sequences_fp, 'r')
-
-        exp_table = biom.Table(np.array([[2, 1],
-                                         [0, 1],
-                                         [0, 2]]),
-                               ['sample1_1',
-                                's2_42',
-                                's2_2'],
-                               ['sample1', 's2'])
-
-        with redirected_stdio(stderr=os.devnull):
-            obs_table, obs_sequences = dereplicate_sequences(
-                sequences=input_sequences,
-                hashed_feature_ids=False
-                )
-        # order of identifiers is important for biom.Table equality
-        obs_table = \
-            obs_table.sort_order(exp_table.ids(axis='observation'),
-                                 axis='observation')
-        self.assertEqual(obs_table, exp_table)
-
-        # sequences are reverse-sorted by abundance in output
-        # No description anymore, just the IDs
-        obs_seqs = list(skbio.io.read(str(obs_sequences),
-                        constructor=skbio.DNA, format='fasta'))
-        exp_seqs = [skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTAATCGG',
-                              metadata={'id': ('sample1_1')}),
-                    skbio.DNA('ACGTACGTACGTACGTACGTACGTACGTACGTGCATGGTGCGACCG',
-                              metadata={'id': ('s2_42')}),
-                    skbio.DNA('AAACGTTACGGTTAACTATACATGCAGAAGACTA',
-                              metadata={'id': ('s2_2')})]
-        self.assertEqual(obs_seqs, exp_seqs)
-
     def test_dereplicate_sequences_underscores_in_ids(self):
         input_sequences_fp = self.get_data_path('seqs-2')
         input_sequences = QIIME1DemuxDirFmt(input_sequences_fp, 'r')

@@ -19,8 +19,8 @@ from ._cluster_features import run_command
 
 def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                           derep_prefix: bool = False,
-                          hashed_feature_ids: bool = True,
-                          min_seq_length: int = 1
+                          min_seq_length: int = 1,
+                          min_unique_size: int = 1
                           ) -> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
@@ -29,13 +29,12 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                '--derep_prefix' if derep_prefix else '--derep_fulllength',
                seqs_fp,
                '--output', str(dereplicated_sequences),
-               '--relabel_keep',
+               '--relabel_sha1', '--relabel_keep',
                '--uc', out_uc.name,
                '--xsize',
                '--minseqlength', str(min_seq_length),
+               '--minuniquesize', str(min_unique_size),
                '--fasta_width', '0']
-        if hashed_feature_ids:
-            cmd.append('--relabel_sha1')
         run_command(cmd)
         out_uc.seek(0)
         table = parse_uc(out_uc)
