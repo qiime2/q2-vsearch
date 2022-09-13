@@ -18,21 +18,21 @@ from ._cluster_features import run_command
 
 
 def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
-                          derep_prefix: bool = False
+                          derep_prefix: bool = False,
+                          hashed_feature_ids: bool = True,
                           ) -> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
         seqs_fp = '%s/seqs.fna' % str(sequences)
         cmd = ['vsearch',
-               '--derep_fulllength', seqs_fp,
+               '--derep_prefix' if derep_prefix else '--derep_fulllength',
+               seqs_fp,
                '--output', str(dereplicated_sequences),
-               '--relabel_sha1', '--relabel_keep',
+               '--relabel_sha1' if hashed_feature_ids else '--relabel_keep',
                '--uc', out_uc.name,
                '--xsize',
                '--minseqlength', '1',
                '--fasta_width', '0']
-        if derep_prefix:
-            cmd[1] = '--derep_prefix'
         run_command(cmd)
         out_uc.seek(0)
         table = parse_uc(out_uc)

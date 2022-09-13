@@ -235,6 +235,7 @@ plugin.methods.register_function(
     },
     parameters={
         'derep_prefix': qiime2.plugin.Bool,
+        'hashed_feature_ids': qiime2.plugin.Bool,
     },
     outputs=[
         ('dereplicated_table', FeatureTable[Frequency]),
@@ -249,6 +250,11 @@ plugin.methods.register_function(
                          'longer sequences, it is clustered with the shortest '
                          'of them. If they are equally long, it is clustered '
                          'with the most abundant.'),
+        'hashed_feature_ids': ('If true, the feature ids in the resulting '
+                         'table will be presented as hashes of the sequences '
+                         'defining each feature. The hash will always be the '
+                         'same for the same sequence so this allows feature '
+                         'tables to be merged across runs of this method.'),
     },
     output_descriptions={
         'dereplicated_table': 'The table of dereplicated sequences.',
@@ -257,7 +263,7 @@ plugin.methods.register_function(
     name='Dereplicate sequences.',
     description=('Dereplicate sequence data and create a feature table and '
                  'feature representative sequences. Feature identifiers '
-                 'in the resulting artifacts will be the sha1 hash '
+                 'in the resulting artifacts will optionally be the sha1 hash '
                  'of the sequence defining each feature. If clustering of '
                  'features into OTUs is desired, the resulting artifacts '
                  'can be passed to the cluster_features_* methods in this '
