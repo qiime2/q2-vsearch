@@ -236,6 +236,7 @@ plugin.methods.register_function(
     parameters={
         'derep_prefix': qiime2.plugin.Bool,
         'hashed_feature_ids': qiime2.plugin.Bool,
+        'min_seq_length': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
     },
     outputs=[
         ('dereplicated_table', FeatureTable[Frequency]),
@@ -256,6 +257,8 @@ plugin.methods.register_function(
                                'always be the same for the same sequence so '
                                'this allows feature tables to be merged '
                                'across runs of this method.'),
+        'min_seq_length': ('Discard sequences of length smaller than this'
+                           'integer.'),
     },
     output_descriptions={
         'dereplicated_table': 'The table of dereplicated sequences.',
