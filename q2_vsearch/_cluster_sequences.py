@@ -29,12 +29,13 @@ def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
                '--derep_prefix' if derep_prefix else '--derep_fulllength',
                seqs_fp,
                '--output', str(dereplicated_sequences),
-               '--relabel_sha1' if hashed_feature_ids,
                '--relabel_keep',
                '--uc', out_uc.name,
                '--xsize',
                '--minseqlength', min_seq_length,
                '--fasta_width', '0']
+        if hashed_feature_ids:
+            cmd[5] = '--relabel_sha1 --relabel_keep'
         run_command(cmd)
         out_uc.seek(0)
         table = parse_uc(out_uc)
