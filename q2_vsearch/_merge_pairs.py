@@ -19,7 +19,7 @@ from q2_types.per_sample_sequences import (
 from ._cluster_features import run_command
 
 
-_jp_defaults = {
+_mp_defaults = {
     'truncqual': None,
     'minlen': 1,
     'maxns': None,
@@ -34,16 +34,16 @@ _jp_defaults = {
 
 
 def join_pairs(demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
-               truncqual: int = _jp_defaults['truncqual'],
-               minlen: int = _jp_defaults['minlen'],
-               maxns: int = _jp_defaults['maxns'],
-               allowmergestagger: bool = _jp_defaults['allowmergestagger'],
-               minovlen: int = _jp_defaults['minovlen'],
-               maxdiffs: int = _jp_defaults['maxdiffs'],
-               minmergelen: int = _jp_defaults['minmergelen'],
-               maxmergelen: int = _jp_defaults['maxmergelen'],
-               maxee: float = _jp_defaults['maxee'],
-               threads: int = _jp_defaults['threads'],
+               truncqual: int = _mp_defaults['truncqual'],
+               minlen: int = _mp_defaults['minlen'],
+               maxns: int = _mp_defaults['maxns'],
+               allowmergestagger: bool = _mp_defaults['allowmergestagger'],
+               minovlen: int = _mp_defaults['minovlen'],
+               maxdiffs: int = _mp_defaults['maxdiffs'],
+               minmergelen: int = _mp_defaults['minmergelen'],
+               maxmergelen: int = _mp_defaults['maxmergelen'],
+               maxee: float = _mp_defaults['maxee'],
+               threads: int = _mp_defaults['threads'],
                ) -> SingleLanePerSampleSingleEndFastqDirFmt:
     _, result = _join_pairs_w_command_output(
         demultiplexed_seqs, truncqual, minlen, maxns, allowmergestagger,
@@ -53,16 +53,16 @@ def join_pairs(demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
 
 def _join_pairs_w_command_output(
         demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
-        truncqual: int = _jp_defaults['truncqual'],
-        minlen: int = _jp_defaults['minlen'],
-        maxns: int = _jp_defaults['maxns'],
-        allowmergestagger: bool = _jp_defaults['allowmergestagger'],
-        minovlen: int = _jp_defaults['minovlen'],
-        maxdiffs: int = _jp_defaults['maxdiffs'],
-        minmergelen: int = _jp_defaults['minmergelen'],
-        maxmergelen: int = _jp_defaults['maxmergelen'],
-        maxee: float = _jp_defaults['maxee'],
-        threads: int = _jp_defaults['threads'],
+        truncqual: int = _mp_defaults['truncqual'],
+        minlen: int = _mp_defaults['minlen'],
+        maxns: int = _mp_defaults['maxns'],
+        allowmergestagger: bool = _mp_defaults['allowmergestagger'],
+        minovlen: int = _mp_defaults['minovlen'],
+        maxdiffs: int = _mp_defaults['maxdiffs'],
+        minmergelen: int = _mp_defaults['minmergelen'],
+        maxmergelen: int = _mp_defaults['maxmergelen'],
+        maxee: float = _mp_defaults['maxee'],
+        threads: int = _mp_defaults['threads'],
         ) -> (List[str], SingleLanePerSampleSingleEndFastqDirFmt):
     # this function exists only to simplify unit testing
 
