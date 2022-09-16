@@ -33,25 +33,25 @@ _mp_defaults = {
 }
 
 
-def join_pairs(demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
-               truncqual: int = _mp_defaults['truncqual'],
-               minlen: int = _mp_defaults['minlen'],
-               maxns: int = _mp_defaults['maxns'],
-               allowmergestagger: bool = _mp_defaults['allowmergestagger'],
-               minovlen: int = _mp_defaults['minovlen'],
-               maxdiffs: int = _mp_defaults['maxdiffs'],
-               minmergelen: int = _mp_defaults['minmergelen'],
-               maxmergelen: int = _mp_defaults['maxmergelen'],
-               maxee: float = _mp_defaults['maxee'],
-               threads: int = _mp_defaults['threads'],
-               ) -> SingleLanePerSampleSingleEndFastqDirFmt:
-    _, result = _join_pairs_w_command_output(
+def merge_pairs(demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
+                truncqual: int = _mp_defaults['truncqual'],
+                minlen: int = _mp_defaults['minlen'],
+                maxns: int = _mp_defaults['maxns'],
+                allowmergestagger: bool = _mp_defaults['allowmergestagger'],
+                minovlen: int = _mp_defaults['minovlen'],
+                maxdiffs: int = _mp_defaults['maxdiffs'],
+                minmergelen: int = _mp_defaults['minmergelen'],
+                maxmergelen: int = _mp_defaults['maxmergelen'],
+                maxee: float = _mp_defaults['maxee'],
+                threads: int = _mp_defaults['threads'],
+                ) -> SingleLanePerSampleSingleEndFastqDirFmt:
+    _, result = _merge_pairs_w_command_output(
         demultiplexed_seqs, truncqual, minlen, maxns, allowmergestagger,
         minovlen, maxdiffs, minmergelen, maxmergelen, maxee, threads)
     return result
 
 
-def _join_pairs_w_command_output(
+def _merge_pairs_w_command_output(
         demultiplexed_seqs: SingleLanePerSamplePairedEndFastqDirFmt,
         truncqual: int = _mp_defaults['truncqual'],
         minlen: int = _mp_defaults['minlen'],

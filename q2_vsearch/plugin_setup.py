@@ -11,7 +11,7 @@ import importlib
 import qiime2.plugin
 import q2_vsearch._cluster_features
 import q2_vsearch._cluster_sequences
-import q2_vsearch._join_pairs
+import q2_vsearch._merge_pairs
 import q2_vsearch._chimera
 import q2_vsearch._stats
 
@@ -265,7 +265,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_vsearch._join_pairs.join_pairs,
+    function=q2_vsearch._merge_pairs.merge_pairs,
     inputs={
         'demultiplexed_seqs': SampleData[PairedEndSequencesWithQuality]
     },
@@ -283,11 +283,11 @@ plugin.methods.register_function(
             0, 8, inclusive_start=True, inclusive_end=True)
     },
     outputs=[
-        ('joined_sequences', SampleData[JoinedSequencesWithQuality])
+        ('merged_sequences', SampleData[JoinedSequencesWithQuality])
     ],
     input_descriptions={
         'demultiplexed_seqs': ('The demultiplexed paired-end sequences to '
-                               'be joined.'),
+                               'be merged.'),
     },
     parameter_descriptions={
         'truncqual': ('Truncate sequences at the first base with the '
@@ -296,25 +296,25 @@ plugin.methods.register_function(
                    'discarded.'),
         'maxns': ('Sequences with more than maxns N characters are '
                   'discarded.'),
-        'allowmergestagger': ('Allow joining of staggered read pairs.'),
+        'allowmergestagger': ('Allow mergeing of staggered read pairs.'),
         'minovlen': ('Minimum overlap length of forward and reverse reads '
-                     'for joining.'),
+                     'for merging.'),
         'maxdiffs': ('Maximum number of mismatches in the forward/reverse '
-                     'read overlap for joining.'),
-        'minmergelen': ('Minimum length of the joined read to be retained.'),
-        'maxmergelen': ('Maximum length of the joined read to be retained.'),
-        'maxee': ('Maximum number of expected errors in the joined read '
+                     'read overlap for merging.'),
+        'minmergelen': ('Minimum length of the merging read to be retained.'),
+        'maxmergelen': ('Maximum length of the merging read to be retained.'),
+        'maxee': ('Maximum number of expected errors in the merging read '
                   'to be retained.'),
         'threads': ('The number of threads to use for computation. Does '
                     'not scale much past 4 threads.')
     },
     output_descriptions={
-        'joined_sequences': ('The joined sequences.'),
+        'merged_sequences': ('The merging sequences.'),
     },
-    name='Join paired-end reads.',
-    description=('Join paired-end sequence reads using vsearch\'s '
+    name='Merge paired-end reads.',
+    description=('Merge paired-end sequence reads using vsearch\'s '
                  'merge_pairs function. See the vsearch documentation for '
-                 'details on how paired-end joining is performed, and for '
+                 'details on how paired-end merging is performed, and for '
                  'more information on the parameters to this method.')
 )
 
