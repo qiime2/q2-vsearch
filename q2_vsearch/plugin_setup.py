@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from ast import AsyncFunctionDef
 import importlib
 
 import qiime2.plugin
@@ -266,7 +267,7 @@ plugin.methods.register_function(
                  'of the sequence defining each feature. If clustering of '
                  'features into OTUs is desired, the resulting artifacts '
                  'can be passed to the cluster_features_* methods in this '
-                 'plugin.')
+                 'plugin. slave')
 )
 
 plugin.methods.register_function(
