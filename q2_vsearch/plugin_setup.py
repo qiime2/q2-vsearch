@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from ast import AsyncFunctionDef
 import importlib
 
 import qiime2.plugin
@@ -251,7 +252,7 @@ plugin.methods.register_function(
                          'longer sequences, it is clustered with the shortest '
                          'of them. If they are equally long, it is clustered '
                          'with the most abundant.'),
-        'min_seq_length': ('Discard sequences shorer than this integer.'),
+        'min_seq_length': ('Discard sequences shorter than this integer.'),
         'min_unique_size': ('Discard sequences with a post-dereplication '
                             'abundance value smaller than integer.'),
     },
@@ -266,7 +267,7 @@ plugin.methods.register_function(
                  'of the sequence defining each feature. If clustering of '
                  'features into OTUs is desired, the resulting artifacts '
                  'can be passed to the cluster_features_* methods in this '
-                 'plugin.')
+                 'plugin. slave')
 )
 
 plugin.methods.register_function(
@@ -419,7 +420,7 @@ plugin.methods.register_function(
     description=('Apply the vsearch uchime_denovo method to identify chimeric '
                  'feature sequences. The results of this method can be used '
                  'to filter chimeric features from the corresponding feature '
-                 'table. For additional details, please refer to the vsearch '
+                 'table. For more details, please refer to the vsearch '
                  'documentation.')
 )
 
