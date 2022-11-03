@@ -17,7 +17,7 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
     FastqGzFormat)
 
-from q2_vsearch._join_pairs import join_pairs, _join_pairs_w_command_output
+from q2_vsearch._merge_pairs import merge_pairs, _merge_pairs_w_command_output
 
 
 class MergePairsTests(TestPluginBase):
@@ -53,10 +53,10 @@ class MergePairsTests(TestPluginBase):
             # input reads are 151 bases, so all output must be longer
             self.assertTrue(e > 151)
 
-    def test_join_pairs(self):
+    def test_merge_pairs(self):
 
         with redirected_stdio(stderr=os.devnull):
-            obs = join_pairs(self.input_seqs)
+            obs = merge_pairs(self.input_seqs)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -82,16 +82,16 @@ class MergePairsTests(TestPluginBase):
             seq_lengths = np.asarray([len(s) for s in seqs])
             self._test_seq_lengths(seq_lengths)
 
-            # expected number of sequences are joined
+            # expected number of sequences are merged
             self.assertEqual(
                 len(seq_lengths),
                 default_exp_sequence_counts[str(fastq_name)])
 
-    def test_join_pairs_some_samples_w_no_joined_seqs(self):
+    def test_merge_pairs_some_samples_w_no_joined_seqs(self):
         # minmergelen is set very high here, resulting in only one sequence
-        # being joined across the three samples.
+        # being merged across the three samples.
         with redirected_stdio(stderr=os.devnull):
-            obs = join_pairs(self.input_seqs, minmergelen=279)
+            obs = merge_pairs(self.input_seqs, minmergelen=279)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -114,16 +114,16 @@ class MergePairsTests(TestPluginBase):
             seqs = list(seqs)
             seq_lengths = np.asarray([len(s) for s in seqs])
 
-            # expected number of sequences are joined
+            # expected number of sequences are merged
             self.assertEqual(
                 len(seq_lengths),
                 exp_sequence_counts[str(fastq_name)])
 
-    def test_join_pairs_all_samples_w_no_joined_seqs(self):
+    def test_merge_pairs_all_samples_w_no_joined_seqs(self):
         # minmergelen is set very high here, resulting in no sequences
-        # being joined across the three samples.
+        # being merged across the three samples.
         with redirected_stdio(stderr=os.devnull):
-            obs = join_pairs(self.input_seqs, minmergelen=500)
+            obs = merge_pairs(self.input_seqs, minmergelen=500)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -141,9 +141,9 @@ class MergePairsTests(TestPluginBase):
 
             self.assertEqual(len(seq_lengths), 0)
 
-    def test_join_pairs_alt_truncqual(self):
+    def test_merge_pairs_alt_truncqual(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, truncqual=5)
 
         # sanity check the output
@@ -154,9 +154,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_truncqual 5' in ' '.join(cmd))
 
-    def test_join_pairs_alt_minlen(self):
+    def test_merge_pairs_alt_minlen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, minlen=25)
 
         # sanity check the output
@@ -167,9 +167,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_minlen 25' in ' '.join(cmd))
 
-    def test_join_pairs_alt_maxns(self):
+    def test_merge_pairs_alt_maxns(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, maxns=2)
 
         # sanity check the output
@@ -180,9 +180,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxns 2' in ' '.join(cmd))
 
-    def test_join_pairs_alt_allowmergestagger(self):
+    def test_merge_pairs_alt_allowmergestagger(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, allowmergestagger=True)
 
         # sanity check the output
@@ -193,9 +193,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_allowmergestagger' in cmd)
 
-    def test_join_pairs_alt_minovlen(self):
+    def test_merge_pairs_alt_minovlen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, minovlen=42)
 
         # sanity check the output
@@ -206,9 +206,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_minovlen 42' in ' '.join(cmd))
 
-    def test_join_pairs_alt_maxdiffs(self):
+    def test_merge_pairs_alt_maxdiffs(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, maxdiffs=2)
 
         # sanity check the output
@@ -219,9 +219,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxdiffs 2' in ' '.join(cmd))
 
-    def test_join_pairs_alt_minmergelen(self):
+    def test_merge_pairs_alt_minmergelen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, minmergelen=250)
 
         # sanity check the output
@@ -232,9 +232,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_minmergelen 250' in ' '.join(cmd))
 
-    def test_join_pairs_alt_maxmergelen(self):
+    def test_merge_pairs_alt_maxmergelen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, maxmergelen=250)
 
         # sanity check the output
@@ -245,9 +245,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxmergelen 250' in ' '.join(cmd))
 
-    def test_join_pairs_alt_maxee(self):
+    def test_merge_pairs_alt_maxee(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, maxee=25.0)
 
         # sanity check the output
@@ -258,9 +258,9 @@ class MergePairsTests(TestPluginBase):
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--fastq_maxee 25.0' in ' '.join(cmd))
 
-    def test_join_pairs_alt_threads(self):
+    def test_merge_pairs_alt_threads(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _join_pairs_w_command_output(
+            cmd, obs = _merge_pairs_w_command_output(
                 self.input_seqs, threads=2)
 
         # sanity check the output
