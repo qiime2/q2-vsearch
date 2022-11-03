@@ -297,10 +297,10 @@ plugin.methods.register_function(
         'maxns': ('Sequences with more than maxns N characters are '
                   'discarded.'),
         'allowmergestagger': ('Allow merging of staggered read pairs.'),
-        'minovlen': ('Minimum overlap length of forward and reverse reads '
+        'minovlen': ('Minimum length of the area of overlap between reads '
                      'during merging.'),
-        'maxdiffs': ('Maximum number of mismatches in the forward/reverse '
-                     'read overlap during merging.'),
+        'maxdiffs': ('Maximum number of mismatches in the area of overlap '
+                     'during merging.'),
         'minmergelen': ('Minimum length of the merged read to be retained.'),
         'maxmergelen': ('Maximum length of the merged read to be retained.'),
         'maxee': ('Maximum number of expected errors in the merged read '
