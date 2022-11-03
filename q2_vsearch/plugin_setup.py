@@ -296,20 +296,20 @@ plugin.methods.register_function(
                    'discarded.'),
         'maxns': ('Sequences with more than maxns N characters are '
                   'discarded.'),
-        'allowmergestagger': ('Allow mergeing of staggered read pairs.'),
+        'allowmergestagger': ('Allow merging of staggered read pairs.'),
         'minovlen': ('Minimum overlap length of forward and reverse reads '
-                     'for merging.'),
+                     'during merging.'),
         'maxdiffs': ('Maximum number of mismatches in the forward/reverse '
-                     'read overlap for merging.'),
-        'minmergelen': ('Minimum length of the merging read to be retained.'),
-        'maxmergelen': ('Maximum length of the merging read to be retained.'),
-        'maxee': ('Maximum number of expected errors in the merging read '
+                     'read overlap during merging.'),
+        'minmergelen': ('Minimum length of the merged read to be retained.'),
+        'maxmergelen': ('Maximum length of the merged read to be retained.'),
+        'maxee': ('Maximum number of expected errors in the merged read '
                   'to be retained.'),
         'threads': ('The number of threads to use for computation. Does '
                     'not scale much past 4 threads.')
     },
     output_descriptions={
-        'merged_sequences': ('The merging sequences.'),
+        'merged_sequences': ('The merged sequences.'),
     },
     name='Merge paired-end reads.',
     description=('Merge paired-end sequence reads using vsearch\'s '
