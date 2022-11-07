@@ -235,6 +235,8 @@ plugin.methods.register_function(
     },
     parameters={
         'derep_prefix': qiime2.plugin.Bool,
+        'min_seq_length': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
+        'min_unique_size': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
     },
     outputs=[
         ('dereplicated_table', FeatureTable[Frequency]),
@@ -249,6 +251,9 @@ plugin.methods.register_function(
                          'longer sequences, it is clustered with the shortest '
                          'of them. If they are equally long, it is clustered '
                          'with the most abundant.'),
+        'min_seq_length': ('Discard sequences shorter than this integer.'),
+        'min_unique_size': ('Discard sequences with a post-dereplication '
+                            'abundance value smaller than integer.'),
     },
     output_descriptions={
         'dereplicated_table': 'The table of dereplicated sequences.',
@@ -414,7 +419,7 @@ plugin.methods.register_function(
     description=('Apply the vsearch uchime_denovo method to identify chimeric '
                  'feature sequences. The results of this method can be used '
                  'to filter chimeric features from the corresponding feature '
-                 'table. For additional details, please refer to the vsearch '
+                 'table. For more details, please refer to the vsearch '
                  'documentation.')
 )
 
