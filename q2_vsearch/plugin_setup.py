@@ -53,6 +53,7 @@ plugin.methods.register_function(
     parameters={
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
                           0, 1, inclusive_start=False, inclusive_end=True),
+        'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
         'threads': qiime2.plugin.Int % qiime2.plugin.Range(
                           0, 256, inclusive_start=True, inclusive_end=True)
     },
@@ -68,6 +69,8 @@ plugin.methods.register_function(
         'perc_identity': ('The percent identity at which clustering should be '
                           'performed. This parameter maps to vsearch\'s --id '
                           'parameter.'),
+        'strand': ('Search plus (i.e., forward) or both (i.e., forward and '
+                   'reverse complement) strands.'),
         'threads': ('The number of threads to use for computation. Passing 0 '
                     'will launch one thread per CPU core.')
     },

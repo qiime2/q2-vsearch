@@ -182,7 +182,9 @@ def _fasta_with_sizes(input_fasta_fp, output_fasta_fp, table):
 
 
 def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
-                             perc_identity: float, threads: int = 1
+                             perc_identity: float,
+                             strand: str = 'plus',
+                             threads: int = 1
                              ) -> (biom.Table, DNAFASTAFormat):
     clustered_sequences = DNAFASTAFormat()
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
@@ -193,6 +195,7 @@ def cluster_features_de_novo(sequences: DNAFASTAFormat, table: biom.Table,
                    '--id', str(perc_identity),
                    '--centroids', str(clustered_sequences),
                    '--uc', out_uc.name,
+                   '--strand', str(strand),
                    '--qmask', 'none',  # ensures no lowercase DNA chars
                    '--xsize',
                    '--threads', str(threads),
@@ -347,7 +350,7 @@ def cluster_features_open_reference(ctx, sequences, table, reference_sequences,
 
         de_novo_table, de_novo_seqs = cluster_features_de_novo(
             sequences=unmatched_seqs, table=unmatched_table,
-            perc_identity=perc_identity, threads=threads)
+            perc_identity=perc_identity, strand=strand, threads=threads)
 
         if skipped_closed_ref:
             merged_reference_seqs, = merge_seqs(data=[reference_sequences,
