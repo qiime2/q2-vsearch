@@ -236,14 +236,14 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         with redirected_stdio(stderr=os.devnull):
             obs_table, obs_sequences = cluster_features_de_novo(
                 sequences=input_sequences, table=self.input_table,
-                perc_identity=0.99, strand="both")
+                perc_identity=0.99, strand='both')
 
         # order of identifiers is important for biom.Table equality
         obs_table = \
             obs_table.sort_order(exp_table.ids(axis='observation'),
                                  axis='observation')
 
-        self.assertEqual(obs_table, self.input_table)
+        self.assertEqual(obs_table, exp_table)
 
         input_sequences_list = _read_seqs(input_sequences)
         # sequences are reverse-sorted by abundance in output
