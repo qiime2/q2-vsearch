@@ -198,6 +198,58 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
         exp_seqs = [self.input_sequences_list[0]]
         self.assertEqual(obs_seqs, exp_seqs)
 
+    def test_99_percent_clustering_strand_no_clustering(self):
+        # Feature3 of dna-sequences-4 if the reverse comp of Feature3 of
+        #  dna-sequences-1 and should only cluster if strand is set to 'both'
+        input_sequences_fp = self.get_data_path('dna-sequences-4.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, obs_sequences = cluster_features_de_novo(
+                sequences=input_sequences, table=self.input_table,
+                perc_identity=0.99, strand='plus')
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(self.input_table.ids(axis='observation'),
+                                 axis='observation')
+        self.assertEqual(obs_table, self.input_table)
+
+        # sequences are reverse-sorted by abundance in output
+        obs_seqs = _read_seqs(obs_sequences)
+        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
+                    self.input_sequences_list[2], self.input_sequences_list[1]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
+    def test_99_percent_clustering_strand(self):
+        # Feature3 of dna-sequences-4 if the reverse comp of Feature3 of
+        #  dna-sequences-1 and should only cluster if strand is set to 'both'
+        input_sequences_fp = self.get_data_path('dna-sequences-4.fasta')
+        input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
+
+        exp_table = biom.Table(np.array([[104, 106, 109],
+                                         [1, 1, 2],
+                                         [7, 8, 9]]),
+                               ['feature1', 'feature2',
+                                'feature4'],
+                               ['sample1', 'sample2', 'sample3'])
+        with redirected_stdio(stderr=os.devnull):
+            obs_table, obs_sequences = cluster_features_de_novo(
+                sequences=input_sequences, table=self.input_table,
+                perc_identity=0.99, strand="both")
+
+        # order of identifiers is important for biom.Table equality
+        obs_table = \
+            obs_table.sort_order(exp_table.ids(axis='observation'),
+                                 axis='observation')
+
+        self.assertEqual(obs_table, self.input_table)
+
+        # sequences are reverse-sorted by abundance in output
+        obs_seqs = _read_seqs(obs_sequences)
+        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
+                    self.input_sequences_list[1]]
+        self.assertEqual(obs_seqs, exp_seqs)
+
     def test_short_sequences(self):
         input_sequences_fp = self.get_data_path('dna-sequences-short.fasta')
         input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
@@ -763,6 +815,7 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_skip_closed_reference(self):
+        # TODO: correct this as it is copy-pasted from test_skip_denovo
         # feature1 and feature3 clusters into r1 and feature2 and feature4
         # clusters into r2 during closed-ref clustering; no unclustered
         # features so de-novo clustering is skipped.
