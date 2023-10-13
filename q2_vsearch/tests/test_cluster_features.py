@@ -815,10 +815,9 @@ class ClusterFeaturesOpenReference(TestPluginBase):
         self.assertEqual(obs_ref_seqs, exp_ref_seqs)
 
     def test_skip_closed_reference(self):
-        # TODO: correct this as it is copy-pasted from test_skip_denovo
-        # feature1 and feature3 clusters into r1 and feature2 and feature4
-        # clusters into r2 during closed-ref clustering; no unclustered
-        # features so de-novo clustering is skipped.
+        # self.ref_sequences_2 are rev comps of self.ref_sequences_1. As
+        # strand='both' is not passed, there will not be any clustering during
+        # closed-reference clustering
 
         exp_table = biom.Table(np.array([[100, 101, 103],
                                          [1, 1, 2],
