@@ -214,10 +214,11 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
                                  axis='observation')
         self.assertEqual(obs_table, self.input_table)
 
+        input_sequences_list = _read_seqs(input_sequences)
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
-                    self.input_sequences_list[2], self.input_sequences_list[1]]
+        exp_seqs = [input_sequences_list[0], input_sequences_list[3],
+                    input_sequences_list[2], input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_99_percent_clustering_strand(self):
@@ -244,10 +245,11 @@ class ClusterFeaturesDenovoTests(TestPluginBase):
 
         self.assertEqual(obs_table, self.input_table)
 
+        input_sequences_list = _read_seqs(input_sequences)
         # sequences are reverse-sorted by abundance in output
         obs_seqs = _read_seqs(obs_sequences)
-        exp_seqs = [self.input_sequences_list[0], self.input_sequences_list[3],
-                    self.input_sequences_list[1]]
+        exp_seqs = [input_sequences_list[0], input_sequences_list[3],
+                    input_sequences_list[1]]
         self.assertEqual(obs_seqs, exp_seqs)
 
     def test_short_sequences(self):
