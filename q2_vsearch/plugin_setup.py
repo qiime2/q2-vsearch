@@ -282,7 +282,7 @@ plugin.methods.register_function(
         'minlen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxns': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'allowmergestagger': qiime2.plugin.Bool,
-        'minovlen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
+        'minovlen': qiime2.plugin.Int % qiime2.plugin.Range(5, None),
         'maxdiffs': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
@@ -291,7 +291,8 @@ plugin.methods.register_function(
             0, 8, inclusive_start=True, inclusive_end=True)
     },
     outputs=[
-        ('merged_sequences', SampleData[JoinedSequencesWithQuality])
+        ('merged_sequences', SampleData[JoinedSequencesWithQuality]),
+        ('unmerged_sequences', SampleData[PairedEndSequencesWithQuality])
     ],
     input_descriptions={
         'demultiplexed_seqs': ('The demultiplexed paired-end sequences to '
@@ -317,7 +318,8 @@ plugin.methods.register_function(
                     'not scale much past 4 threads.')
     },
     output_descriptions={
-        'merged_sequences': ('The merged sequences.'),
+        'merged_sequences': 'The merged sequences.',
+        'unmerged_sequences': 'The unmerged paired-end reads.'
     },
     name='Merge paired-end reads.',
     description=('Merge paired-end sequence reads using vsearch\'s '

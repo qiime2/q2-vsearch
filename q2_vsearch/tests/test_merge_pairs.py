@@ -47,16 +47,43 @@ class MergePairsTests(TestPluginBase):
         self.assertEqual(list(manifest['direction']),
                          ['forward', 'forward', 'forward'])
 
+    def _test_manifest_unmerged(self, demultiplexed_seqs):
+        manifest = self._parse_manifest(demultiplexed_seqs)
+        self.assertEqual(len(manifest), 6)
+        self.assertEqual(
+            list(manifest['sample-id']),
+            ['BAQ2687.1'] * 2 + ['BAQ3473.2'] * 2 + ['BAQ4697.2'] * 2
+        )
+        self.assertEqual(
+            list(manifest['filename']),
+            [
+                'BAQ2687.1_0_L001_R1_001.fastq.gz',
+                'BAQ2687.1_0_L001_R2_001.fastq.gz',
+                'BAQ3473.2_1_L001_R1_001.fastq.gz',
+                'BAQ3473.2_1_L001_R2_001.fastq.gz',
+                'BAQ4697.2_2_L001_R1_001.fastq.gz',
+                'BAQ4697.2_2_L001_R2_001.fastq.gz'
+            ]
+        )
+        self.assertEqual(
+            list(manifest['direction']),
+            ['forward', 'reverse'] * 3
+        )
+
     def _test_seq_lengths(self, seq_lengths):
         self.assertTrue(seq_lengths.mean() > 200)
         for e in seq_lengths:
             # input reads are 151 bases, so all output must be longer
             self.assertTrue(e > 151)
 
-    def test_merge_pairs(self):
+    def _test_seq_lengths_unmerged(self, seq_lengths):
+        for e in seq_lengths:
+            # input reads are 151 bases, so unmerged reads should be the same
+            self.assertTrue(e == 151)
 
+    def test_merge_pairs(self):
         with redirected_stdio(stderr=os.devnull):
-            obs = merge_pairs(self.input_seqs)
+            obs, _ = merge_pairs(self.input_seqs)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -87,11 +114,47 @@ class MergePairsTests(TestPluginBase):
                 len(seq_lengths),
                 default_exp_sequence_counts[str(fastq_name)])
 
+    def test_unmerged_pairs(self):
+        with redirected_stdio(stderr=os.devnull):
+            _, unmerged = merge_pairs(self.input_seqs)
+
+        # manifest is as expected
+        self._test_manifest_unmerged(unmerged)
+
+        # expected number of fastq files are created
+        output_fastqs = list(unmerged.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 6)
+
+        default_exp_sequence_counts = {
+            'BAQ2687.1_0_L001_R1_001.fastq.gz': 31,
+            'BAQ2687.1_0_L001_R2_001.fastq.gz': 31,
+            'BAQ3473.2_1_L001_R1_001.fastq.gz': 30,
+            'BAQ3473.2_1_L001_R2_001.fastq.gz': 30,
+            'BAQ4697.2_2_L001_R1_001.fastq.gz': 26,
+            'BAQ4697.2_2_L001_R2_001.fastq.gz': 26,
+        }
+        for fastq_name, fastq_path in output_fastqs:
+            seqs = skbio.io.read(
+                str(fastq_path),
+                format='fastq',
+                compression='gzip',
+                constructor=skbio.DNA
+            )
+            seqs = list(seqs)
+            seq_lengths = np.asarray([len(s) for s in seqs])
+            self._test_seq_lengths_unmerged(seq_lengths)
+
+            # expected number of sequences are unmerged
+            self.assertEqual(
+                len(seq_lengths),
+                default_exp_sequence_counts[str(fastq_name)]
+            )
+
     def test_merge_pairs_some_samples_w_no_joined_seqs(self):
         # minmergelen is set very high here, resulting in only one sequence
         # being merged across the three samples.
         with redirected_stdio(stderr=os.devnull):
-            obs = merge_pairs(self.input_seqs, minmergelen=279)
+            obs, _ = merge_pairs(self.input_seqs, minmergelen=279)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -123,7 +186,7 @@ class MergePairsTests(TestPluginBase):
         # minmergelen is set very high here, resulting in no sequences
         # being merged across the three samples.
         with redirected_stdio(stderr=os.devnull):
-            obs = merge_pairs(self.input_seqs, minmergelen=500)
+            obs, _ = merge_pairs(self.input_seqs, minmergelen=500)
 
         # manifest is as expected
         self._test_manifest(obs)
@@ -143,7 +206,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_truncqual(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, truncqual=5)
 
         # sanity check the output
@@ -156,7 +219,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_minlen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, minlen=25)
 
         # sanity check the output
@@ -169,7 +232,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_maxns(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, maxns=2)
 
         # sanity check the output
@@ -182,7 +245,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_allowmergestagger(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, allowmergestagger=True)
 
         # sanity check the output
@@ -195,7 +258,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_minovlen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, minovlen=42)
 
         # sanity check the output
@@ -208,7 +271,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_maxdiffs(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, maxdiffs=2)
 
         # sanity check the output
@@ -221,7 +284,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_minmergelen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, minmergelen=250)
 
         # sanity check the output
@@ -234,7 +297,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_maxmergelen(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, maxmergelen=250)
 
         # sanity check the output
@@ -247,7 +310,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_maxee(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, maxee=25.0)
 
         # sanity check the output
@@ -260,7 +323,7 @@ class MergePairsTests(TestPluginBase):
 
     def test_merge_pairs_alt_threads(self):
         with redirected_stdio(stderr=os.devnull):
-            cmd, obs = _merge_pairs_w_command_output(
+            cmd, obs, _ = _merge_pairs_w_command_output(
                 self.input_seqs, threads=2)
 
         # sanity check the output
