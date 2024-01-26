@@ -54,8 +54,7 @@ plugin.methods.register_function(
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
                           0, 1, inclusive_start=False, inclusive_end=True),
         'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                          0, 256, inclusive_start=True, inclusive_end=True)
+        'threads': qiime2.plugin.Threads,
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
@@ -107,8 +106,7 @@ plugin.methods.register_function(
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
                           0, 1, inclusive_start=False, inclusive_end=True),
         'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                0, 256, inclusive_start=True, inclusive_end=True)
+        'threads': qiime2.plugin.Threads,
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
@@ -167,8 +165,7 @@ plugin.pipelines.register_function(
         'perc_identity': qiime2.plugin.Float % qiime2.plugin.Range(
                           0, 1, inclusive_start=False, inclusive_end=True),
         'strand': qiime2.plugin.Str % qiime2.plugin.Choices(['plus', 'both']),
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                0, 256, inclusive_start=True, inclusive_end=True)
+        'threads': qiime2.plugin.Threads,
     },
     outputs=[
         ('clustered_table', FeatureTable[Frequency]),
@@ -287,8 +284,7 @@ plugin.methods.register_function(
         'minmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxmergelen': qiime2.plugin.Int % qiime2.plugin.Range(0, None),
         'maxee': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-            0, 8, inclusive_start=True, inclusive_end=True)
+        'threads': qiime2.plugin.Threads,
     },
     outputs=[
         ('merged_sequences', SampleData[JoinedSequencesWithQuality]),
@@ -342,8 +338,7 @@ plugin.methods.register_function(
                           0., 1.0, inclusive_end=True),
         'xn': qiime2.plugin.Float % qiime2.plugin.Range(
                           1., None, inclusive_start=False),
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-                          0, 256, inclusive_start=True, inclusive_end=True)
+        'threads': qiime2.plugin.Threads,
     },
     outputs=[
         ('chimeras', FeatureData[Sequence]),
@@ -436,8 +431,7 @@ plugin.visualizers.register_function(
             SequencesWithQuality | PairedEndSequencesWithQuality],
     },
     parameters={
-        'threads': qiime2.plugin.Int % qiime2.plugin.Range(
-            1, None) | qiime2.plugin.Str % qiime2.plugin.Choices(['auto'])
+        'threads': qiime2.plugin.Threads,
     },
     input_descriptions={
         'sequences': 'Fastq sequences'
