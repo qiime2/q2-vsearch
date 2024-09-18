@@ -30,8 +30,9 @@ def _get_stats_easy(cmds_packed) -> None:
     with fileinput.input(files=filelist, mode='r',
                          openhook=fileinput.hook_compressed) as fh:
         for line in fh:
+            encoded_line = line.encode('utf-8')
             for p in processes:
-                p.stdin.write(line)
+                p.stdin.write(encoded_line)
 
     for p in processes:
         p.stdin.close()
