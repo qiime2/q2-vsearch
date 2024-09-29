@@ -102,3 +102,35 @@ def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
         run_command(cmd)
 
     return cmd, chimeras, nonchimeras, uchime_stats
+
+
+def uchime2_denovo(sequences: DNAFASTAFormat,
+                   table: biom.Table,
+                   dn: float = _uchime_defaults['dn'],
+                   xn: float = _uchime_defaults['xn']) \
+                   -> (DNAFASTAFormat, DNAFASTAFormat, UchimeStatsFmt):
+    cmd, chimeras, nonchimeras, uchime_stats = \
+        _uchime2_denovo(sequences, table, dn, xn)
+    return chimeras, nonchimeras, uchime_stats
+
+
+def _uchime2_denovo(sequences, table, dn, xn):
+    # this function only exists to simplify testing
+    chimeras = DNAFASTAFormat()
+    nonchimeras = DNAFASTAFormat()
+    uchime_stats = UchimeStatsFmt()
+    with tempfile.NamedTemporaryFile() as fasta_with_sizes:
+        _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
+        cmd = ['vsearch',
+               '--uchime2_denovo', fasta_with_sizes.name,
+               '--uchimeout', str(uchime_stats),
+               '--nonchimeras', str(nonchimeras),
+               '--chimeras', str(chimeras),
+               '--dn', str(dn),
+               '--xn', str(xn),
+               '--qmask', 'none',  # ensures no lowercase DNA chars
+               '--xsize',
+               '--fasta_width', '0']
+        run_command(cmd)
+
+    return cmd, chimeras, nonchimeras, uchime_stats
