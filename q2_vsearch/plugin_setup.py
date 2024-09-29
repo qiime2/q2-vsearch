@@ -368,7 +368,7 @@ plugin.methods.register_function(
         'nonchimeras': 'The non-chimeric sequences.',
         'stats': 'Summary statistics from chimera checking.'
     },
-    name='Reference-based chimera filtering with vsearch.',
+    name='Reference-based chimera filtering.',
     description=('Apply the vsearch uchime_ref method to identify chimeric '
                  'feature sequences. The results of this method can be used '
                  'to filter chimeric features from the corresponding feature '
@@ -415,12 +415,51 @@ plugin.methods.register_function(
         'nonchimeras': 'The non-chimeric sequences.',
         'stats': 'Summary statistics from chimera checking.'
     },
-    name='De novo chimera filtering with vsearch.',
+    name='De novo chimera filtering.',
     description=('Apply the vsearch uchime_denovo method to identify chimeric '
                  'feature sequences. The results of this method can be used '
                  'to filter chimeric features from the corresponding feature '
                  'table. For more details, please refer to the vsearch '
                  'documentation.')
+)
+
+plugin.methods.register_function(
+    function=q2_vsearch._chimera.uchime2_denovo,
+    inputs={
+        'sequences': FeatureData[Sequence],
+        'table': FeatureTable[Frequency]},
+    parameters={
+        'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
+        'xn': qiime2.plugin.Float % qiime2.plugin.Range(
+                          1., None, inclusive_start=False)
+    },
+    outputs=[
+        ('chimeras', FeatureData[Sequence]),
+        ('nonchimeras', FeatureData[Sequence]),
+        ('stats', UchimeStats)
+    ],
+    input_descriptions={
+        'sequences': 'The feature sequences to be chimera-checked.',
+        'table': ('Feature table (used for computing total feature '
+                  'abundances).'),
+    },
+    parameter_descriptions={
+        'dn': ('No vote pseudo-count, corresponding to the parameter n in '
+               'the chimera scoring function.'),
+        'xn': ('No vote weight, corresponding to the parameter beta in the '
+               'scoring function.'),
+    },
+    output_descriptions={
+        'chimeras': 'The chimeric sequences.',
+        'nonchimeras': 'The non-chimeric sequences.',
+        'stats': 'Summary statistics from chimera checking.'
+    },
+    name='De novo chimera filtering designed for denoised amplicons.',
+    description=('Apply the vsearch uchime2_denovo method to identify '
+                 'chimeric feature sequences. The results of this method '
+                 'can be used to filter chimeric features from the '
+                 'corresponding feature table. For more details, '
+                 'please refer to the vsearch documentation.')
 )
 
 
