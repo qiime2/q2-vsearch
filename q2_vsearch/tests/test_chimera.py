@@ -17,7 +17,8 @@ from qiime2.plugin import ValidationError
 from qiime2.util import redirected_stdio
 from q2_types.feature_data import DNAFASTAFormat
 from q2_vsearch._chimera import (uchime_denovo, _uchime_denovo,
-                                 uchime2_denovo, _uchime2_denovo,
+                                 uchime2_denovo,
+                                 # _uchime2_denovo,  # see note on line 199
                                  uchime_ref, _uchime_ref)
 from q2_vsearch._format import UchimeStatsFmt
 from .test_cluster_features import _read_seqs
@@ -210,7 +211,6 @@ class Uchime2DenovoTests(TestPluginBase):
     #     # >feature4 is the chimera!
     #     exp_chime = [self.input_sequences_list[3]]
     #     self.assertEqual(obs_chime, exp_chime)
-
 
 
 class UchimeRefTests(TestPluginBase):
