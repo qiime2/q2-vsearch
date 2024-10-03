@@ -14,6 +14,7 @@ import q2_vsearch._cluster_sequences
 import q2_vsearch._merge_pairs
 import q2_vsearch._chimera
 import q2_vsearch._stats
+from q2_vsearch._examples import cluster_features_de_novo
 
 from q2_vsearch._type import UchimeStats
 from q2_vsearch._format import UchimeStatsFmt, UchimeStatsDirFmt
@@ -92,7 +93,9 @@ plugin.methods.register_function(
                  'were clustered in that sample. Feature identifiers and '
                  'sequences will be inherited from the centroid feature '
                  'of each cluster. See the vsearch documentation for details '
-                 'on how sequence clustering is performed.')
+                 'on how sequence clustering is performed.'),
+    examples={'cluster_features_de_novo':
+              cluster_features_de_novo}
 )
 
 plugin.methods.register_function(
