@@ -15,7 +15,8 @@ from ._cluster_features import _fasta_with_sizes, run_command
 from ._format import UchimeStatsFmt
 
 
-_uchime_defaults = {'dn': 1.4,
+_uchime_defaults = {'method': 'uchime',
+                    'dn': 1.4,
                     'mindiffs': 3,
                     'mindiv': 0.8,
                     'minh': 0.28,
@@ -68,6 +69,7 @@ def _uchime_ref(sequences, table, reference_sequences, dn, mindiffs,
 
 def uchime_denovo(sequences: DNAFASTAFormat,
                   table: biom.Table,
+                  method: str = _uchime_defaults['method'],
                   dn: float = _uchime_defaults['dn'],
                   mindiffs: int = _uchime_defaults['mindiffs'],
                   mindiv: float = _uchime_defaults['mindiv'],
@@ -75,11 +77,13 @@ def uchime_denovo(sequences: DNAFASTAFormat,
                   xn: float = _uchime_defaults['xn']) \
                   -> (DNAFASTAFormat, DNAFASTAFormat, UchimeStatsFmt):
     cmd, chimeras, nonchimeras, uchime_stats = \
-        _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn)
+        _uchime_denovo(sequences, table, method,
+                       dn, mindiffs, mindiv, minh, xn)
     return chimeras, nonchimeras, uchime_stats
 
 
-def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
+def _uchime_denovo(sequences, table, method,
+                   dn, mindiffs, mindiv, minh, xn):
     # this function only exists to simplify testing
     chimeras = DNAFASTAFormat()
     nonchimeras = DNAFASTAFormat()
@@ -87,7 +91,7 @@ def _uchime_denovo(sequences, table, dn, mindiffs, mindiv, minh, xn):
     with tempfile.NamedTemporaryFile() as fasta_with_sizes:
         _fasta_with_sizes(str(sequences), fasta_with_sizes.name, table)
         cmd = ['vsearch',
-               '--uchime_denovo', fasta_with_sizes.name,
+               '--' + method + '_denovo', fasta_with_sizes.name,
                '--uchimeout', str(uchime_stats),
                '--nonchimeras', str(nonchimeras),
                '--chimeras', str(chimeras),

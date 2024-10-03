@@ -47,6 +47,7 @@ class UchimeDenovoTests(TestPluginBase):
 
         obs_chime = _read_seqs(chime)
         exp_chime = [self.input_sequences_list[3]]
+        # >feature4 is the chimera!
         self.assertEqual(obs_chime, exp_chime)
 
         # sequences are reverse-sorted by abundance in output
@@ -105,8 +106,10 @@ class UchimeDenovoTests(TestPluginBase):
         with redirected_stdio(stderr=os.devnull):
             cmd, chime, nonchime, stats = _uchime_denovo(
                 sequences=self.input_sequences, table=self.input_table,
+                method='uchime3',
                 dn=42.42, mindiffs=4, mindiv=0.5, minh=0.42, xn=9.0)
         cmd = ' '.join(cmd)
+        self.assertTrue('--uchime3_denovo' in cmd)
         self.assertTrue('--dn 42.42' in cmd)
         self.assertTrue('--mindiffs 4' in cmd)
         self.assertTrue('--mindiv 0.5' in cmd)

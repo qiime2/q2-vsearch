@@ -371,7 +371,7 @@ plugin.methods.register_function(
         'nonchimeras': 'The non-chimeric sequences.',
         'stats': 'Summary statistics from chimera checking.'
     },
-    name='Reference-based chimera filtering with vsearch.',
+    name='Reference-based chimera filtering.',
     description=('Apply the vsearch uchime_ref method to identify chimeric '
                  'feature sequences. The results of this method can be used '
                  'to filter chimeric features from the corresponding feature '
@@ -385,6 +385,8 @@ plugin.methods.register_function(
         'sequences': FeatureData[Sequence],
         'table': FeatureTable[Frequency]},
     parameters={
+        'method': qiime2.plugin.Str % qiime2.plugin.Choices(
+            ['uchime', 'uchime2', 'uchime3']),
         'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
         'mindiffs': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
         'mindiv': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
@@ -404,12 +406,21 @@ plugin.methods.register_function(
                   'abundances).'),
     },
     parameter_descriptions={
+        'method': ('Which algorithm to use.'),
+        # 'abskew': ('The abundance skew is used to distinguish in a threeway '
+        #            'alignment which sequence is the chimera and which are '
+        #            'the parents. The parent sequences must be this many '
+        #            'times more abundant than the child sequence to be '
+        #            'flagged as chimeric.'),
         'dn': ('No vote pseudo-count, corresponding to the parameter n in '
                'the chimera scoring function.'),
-        'mindiffs': 'Minimum number of differences per segment.',
-        'mindiv': 'Minimum divergence from closest parent.',
+        'mindiffs': 'Minimum number of differences per segment. '
+                    'Ignored for uchime2 and uchime3.',
+        'mindiv': 'Minimum divergence from closest parent. '
+                  'Ignored for uchime2 and uchime3.',
         'minh': ('Minimum score (h). Increasing this value tends to reduce '
-                 'the number of false positives and to decrease sensitivity.'),
+                 'the number of false positives and to decrease sensitivity. '
+                 'Ignored for uchime2 and uchime3.'),
         'xn': ('No vote weight, corresponding to the parameter beta in the '
                'scoring function.'),
     },
@@ -418,12 +429,12 @@ plugin.methods.register_function(
         'nonchimeras': 'The non-chimeric sequences.',
         'stats': 'Summary statistics from chimera checking.'
     },
-    name='De novo chimera filtering with vsearch.',
-    description=('Apply the vsearch uchime_denovo method to identify chimeric '
-                 'feature sequences. The results of this method can be used '
-                 'to filter chimeric features from the corresponding feature '
-                 'table. For more details, please refer to the vsearch '
-                 'documentation.')
+    name='De novo chimera filtering.',
+    description=('Apply one of the vsearch uchime*_denovo methods to '
+                 'identify chimeric feature sequences. '
+                 'The results of these methods can be used to filter chimeric '
+                 'features from the corresponding feature table. '
+                 'For more details, please refer to the vsearch manual.')
 )
 
 
