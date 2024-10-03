@@ -17,8 +17,6 @@ from qiime2.plugin import ValidationError
 from qiime2.util import redirected_stdio
 from q2_types.feature_data import DNAFASTAFormat
 from q2_vsearch._chimera import (uchime_denovo, _uchime_denovo,
-                                 uchime2_denovo,
-                                 # _uchime2_denovo,  # see note on line 199
                                  uchime_ref, _uchime_ref)
 from q2_vsearch._format import UchimeStatsFmt
 from .test_cluster_features import _read_seqs
@@ -49,6 +47,7 @@ class UchimeDenovoTests(TestPluginBase):
 
         obs_chime = _read_seqs(chime)
         exp_chime = [self.input_sequences_list[3]]
+        # >feature4 is the chimera!
         self.assertEqual(obs_chime, exp_chime)
 
         # sequences are reverse-sorted by abundance in output
@@ -107,110 +106,15 @@ class UchimeDenovoTests(TestPluginBase):
         with redirected_stdio(stderr=os.devnull):
             cmd, chime, nonchime, stats = _uchime_denovo(
                 sequences=self.input_sequences, table=self.input_table,
+                method='uchime3',
                 dn=42.42, mindiffs=4, mindiv=0.5, minh=0.42, xn=9.0)
         cmd = ' '.join(cmd)
+        self.assertTrue('--uchime3_denovo' in cmd)
         self.assertTrue('--dn 42.42' in cmd)
         self.assertTrue('--mindiffs 4' in cmd)
         self.assertTrue('--mindiv 0.5' in cmd)
         self.assertTrue('--minh 0.42' in cmd)
         self.assertTrue('--xn 9.0' in cmd)
-
-
-class Uchime2DenovoTests(TestPluginBase):
-
-    package = 'q2_vsearch.tests'
-
-    def setUp(self):
-        super().setUp()
-        input_sequences_fp = self.get_data_path('dna-sequences-3.fasta')
-        self.input_sequences = DNAFASTAFormat(input_sequences_fp, mode='r')
-        self.input_sequences_list = _read_seqs(self.input_sequences)
-
-        self.input_table = biom.Table(np.array([[100, 101, 103],
-                                                [99, 98, 99],
-                                                [4, 5, 6],
-                                                [2, 2, 2]]),
-                                      ['feature1', 'feature2', 'feature3',
-                                       'feature4'],
-                                      ['sample1', 'sample2', 'sample3'])
-
-    def test_uchime2_denovo(self):
-        with redirected_stdio(stderr=os.devnull):
-            chime, nonchime, stats = uchime2_denovo(
-                sequences=self.input_sequences, table=self.input_table)
-
-        obs_chime = _read_seqs(chime)
-        # >feature4 is the chimera!
-        exp_chime = [self.input_sequences_list[3]]
-        self.assertEqual(obs_chime, exp_chime)
-
-        # sequences are reverse-sorted by abundance in output
-        obs_nonchime = _read_seqs(nonchime)
-        exp_nonchime = [self.input_sequences_list[0],
-                        self.input_sequences_list[1],
-                        self.input_sequences_list[2]]
-        # Note how >feature4 is gone!
-        self.assertEqual(obs_nonchime, exp_nonchime)
-
-        with stats.open() as stats_fh:
-            stats_text = stats_fh.read()
-        self.assertTrue('feature1' in stats_text)
-        self.assertTrue('feature2' in stats_text)
-        self.assertTrue('feature3' in stats_text)
-        self.assertTrue('feature4' in stats_text)
-        stats_lines = [e for e in stats_text.split('\n')
-                       if len(e) > 0]
-        self.assertEqual(len(stats_lines), 4)
-
-    def test_uchime2_denovo_no_chimeras(self):
-        input_table = biom.Table(np.array([[3, 4, 2],
-                                           [1, 0, 0],
-                                           [4, 5, 6],
-                                           [2, 2, 2]]),
-                                 ['feature1', 'feature2', 'feature3',
-                                  'feature4'],
-                                 ['sample1', 'sample2', 'sample3'])
-        with redirected_stdio(stderr=os.devnull):
-            chime, nonchime, stats = uchime2_denovo(
-                sequences=self.input_sequences, table=input_table)
-
-        obs_chime = _read_seqs(chime)
-        exp_chime = []
-        self.assertEqual(obs_chime, exp_chime)
-
-        # sequences are reverse-sorted by abundance in output
-        obs_nonchime = _read_seqs(nonchime)
-        exp_nonchime = [self.input_sequences_list[2],
-                        self.input_sequences_list[0],
-                        self.input_sequences_list[3],
-                        self.input_sequences_list[1]]
-        self.assertEqual(obs_nonchime, exp_nonchime)
-
-        with stats.open() as stats_fh:
-            stats_text = stats_fh.read()
-        self.assertTrue('feature1' in stats_text)
-        self.assertTrue('feature2' in stats_text)
-        self.assertTrue('feature3' in stats_text)
-        self.assertTrue('feature4' in stats_text)
-        stats_lines = [e for e in stats_text.split('\n')
-                       if len(e) > 0]
-        self.assertEqual(len(stats_lines), 4)
-
-    # Is also needed for this flavor of the function?
-    # Removing it still keeps coverage at 100%
-    # def test_uchime2_denovo_no_chimeras_alt_params(self):
-    #     with redirected_stdio(stderr=os.devnull):
-    #         cmd, chime, nonchime, stats = _uchime2_denovo(
-    #             sequences=self.input_sequences, table=self.input_table,
-    #             dn=9999.42, xn=9.01)
-    #     cmd = ' '.join(cmd)
-    #     self.assertTrue('--dn 9999.42' in cmd)
-    #     self.assertTrue('--xn 9.01' in cmd)
-
-    #     obs_chime = _read_seqs(chime)
-    #     # >feature4 is the chimera!
-    #     exp_chime = [self.input_sequences_list[3]]
-    #     self.assertEqual(obs_chime, exp_chime)
 
 
 class UchimeRefTests(TestPluginBase):

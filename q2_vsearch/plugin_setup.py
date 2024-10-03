@@ -382,6 +382,8 @@ plugin.methods.register_function(
         'sequences': FeatureData[Sequence],
         'table': FeatureTable[Frequency]},
     parameters={
+        'method': qiime2.plugin.Str % qiime2.plugin.Choices(
+            ['uchime', 'uchime2', 'uchime3']),
         'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
         'mindiffs': qiime2.plugin.Int % qiime2.plugin.Range(1, None),
         'mindiv': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
@@ -401,12 +403,21 @@ plugin.methods.register_function(
                   'abundances).'),
     },
     parameter_descriptions={
+        'method': ('Which algorithm to use.'),
+        # 'abskew': ('The abundance skew is used to distinguish in a threeway '
+        #            'alignment which sequence is the chimera and which are '
+        #            'the parents. The parent sequences must be this many '
+        #            'times more abundant than the child sequence to be '
+        #            'flagged as chimeric.'),
         'dn': ('No vote pseudo-count, corresponding to the parameter n in '
                'the chimera scoring function.'),
-        'mindiffs': 'Minimum number of differences per segment.',
-        'mindiv': 'Minimum divergence from closest parent.',
+        'mindiffs': 'Minimum number of differences per segment. '
+                    'Ignored for uchime2 and uchime3.',
+        'mindiv': 'Minimum divergence from closest parent. '
+                  'Ignored for uchime2 and uchime3.',
         'minh': ('Minimum score (h). Increasing this value tends to reduce '
-                 'the number of false positives and to decrease sensitivity.'),
+                 'the number of false positives and to decrease sensitivity. '
+                 'Ignored for uchime2 and uchime3.'),
         'xn': ('No vote weight, corresponding to the parameter beta in the '
                'scoring function.'),
     },
@@ -416,50 +427,11 @@ plugin.methods.register_function(
         'stats': 'Summary statistics from chimera checking.'
     },
     name='De novo chimera filtering.',
-    description=('Apply the vsearch uchime_denovo method to identify chimeric '
-                 'feature sequences. The results of this method can be used '
-                 'to filter chimeric features from the corresponding feature '
-                 'table. For more details, please refer to the vsearch '
-                 'documentation.')
-)
-
-plugin.methods.register_function(
-    function=q2_vsearch._chimera.uchime2_denovo,
-    inputs={
-        'sequences': FeatureData[Sequence],
-        'table': FeatureTable[Frequency]},
-    parameters={
-        'dn': qiime2.plugin.Float % qiime2.plugin.Range(0., None),
-        'xn': qiime2.plugin.Float % qiime2.plugin.Range(
-                          1., None, inclusive_start=False)
-    },
-    outputs=[
-        ('chimeras', FeatureData[Sequence]),
-        ('nonchimeras', FeatureData[Sequence]),
-        ('stats', UchimeStats)
-    ],
-    input_descriptions={
-        'sequences': 'The feature sequences to be chimera-checked.',
-        'table': ('Feature table (used for computing total feature '
-                  'abundances).'),
-    },
-    parameter_descriptions={
-        'dn': ('No vote pseudo-count, corresponding to the parameter n in '
-               'the chimera scoring function.'),
-        'xn': ('No vote weight, corresponding to the parameter beta in the '
-               'scoring function.'),
-    },
-    output_descriptions={
-        'chimeras': 'The chimeric sequences.',
-        'nonchimeras': 'The non-chimeric sequences.',
-        'stats': 'Summary statistics from chimera checking.'
-    },
-    name='De novo chimera filtering designed for denoised amplicons.',
-    description=('Apply the vsearch uchime2_denovo method to identify '
-                 'chimeric feature sequences. The results of this method '
-                 'can be used to filter chimeric features from the '
-                 'corresponding feature table. For more details, '
-                 'please refer to the vsearch documentation.')
+    description=('Apply one of the vsearch uchime*_denovo methods to '
+                 'identify chimeric feature sequences. '
+                 'The results of these methods can be used to filter chimeric '
+                 'features from the corresponding feature table. '
+                 'For more details, please refer to the vsearch manual.')
 )
 
 
