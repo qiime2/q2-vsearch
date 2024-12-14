@@ -407,11 +407,6 @@ plugin.methods.register_function(
     },
     parameter_descriptions={
         'method': ('Which algorithm to use.'),
-        # 'abskew': ('The abundance skew is used to distinguish in a threeway '
-        #            'alignment which sequence is the chimera and which are '
-        #            'the parents. The parent sequences must be this many '
-        #            'times more abundant than the child sequence to be '
-        #            'flagged as chimeric.'),
         'dn': ('No vote pseudo-count, corresponding to the parameter n in '
                'the chimera scoring function.'),
         'mindiffs': 'Minimum number of differences per segment. '
