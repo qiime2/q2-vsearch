@@ -406,13 +406,14 @@ plugin.methods.register_function(
                   'abundances).'),
     },
     parameter_descriptions={
-        'method': ('Which algorithm to use.'),
+        'method': ('Denovo chimera detection based on uchime (Edgar 2011), '
+                   'uchime2 (Edgar 2016), or uchime3 (Edgar 2016).'),
         'dn': ('No vote pseudo-count, corresponding to the parameter n in '
                'the chimera scoring function.'),
-        'mindiffs': 'Minimum number of differences per segment. '
-                    'Ignored for uchime2 and uchime3.',
-        'mindiv': 'Minimum divergence from closest parent. '
-                  'Ignored for uchime2 and uchime3.',
+        'mindiffs': ('Minimum number of differences per segment. '
+                     'Ignored for uchime2 and uchime3.'),
+        'mindiv': ('Minimum divergence from closest parent. '
+                   'Ignored for uchime2 and uchime3.'),
         'minh': ('Minimum score (h). Increasing this value tends to reduce '
                  'the number of false positives and to decrease sensitivity. '
                  'Ignored for uchime2 and uchime3.'),
