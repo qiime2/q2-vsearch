@@ -430,7 +430,8 @@ plugin.methods.register_function(
                  'identify chimeric feature sequences. '
                  'The results of these methods can be used to filter chimeric '
                  'features from the corresponding feature table. '
-                 'For more details, please refer to the vsearch manual.')
+                 'For more details, please refer to the vsearch manual.'),
+    citations=[citations['edgar2011uchime', 'edgar2016uchime2', 'edgar2016unoise2']]
 )
 
 
