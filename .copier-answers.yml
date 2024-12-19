@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: dfb0404
+_src_path: https://github.com/qiime2/q2-setup-template.git
+module_name: vsearch
+plugin_name: q2_vsearch
+plugin_scripts: null
+project_author_email: gregcaporaso@gmail.com
+project_author_name: Greg Caporaso
+project_description: QIIME 2 plugin for vsearch.
+project_name: q2-vsearch
+project_urls_homepage: https://qiime2.org
+project_urls_repository: https://github.com/qiime2/q2-vsearch
