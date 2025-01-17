@@ -69,3 +69,7 @@ target/
 *.qzv
 
 .DS_Store
+
+# Version file from versioningit
+_version.py
+
