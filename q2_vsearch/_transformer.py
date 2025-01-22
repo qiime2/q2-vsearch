@@ -9,7 +9,6 @@
 import collections
 
 import pandas as pd
-import numpy as np
 import qiime2
 
 from .plugin_setup import plugin
