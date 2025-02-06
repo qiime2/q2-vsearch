@@ -17,30 +17,47 @@ import skbio.io
 from ._cluster_features import run_command
 
 
-def dereplicate_sequences(sequences: QIIME1DemuxDirFmt,
-                          derep_prefix: bool = False,
-                          min_seq_length: int = 1,
-                          min_unique_size: int = 1
-                          ) -> (biom.Table, DNAFASTAFormat):
+def dereplicate_sequences(
+    sequences: QIIME1DemuxDirFmt,
+    derep_prefix: bool = False,
+    min_seq_length: int = 1,
+    min_unique_size: int = 1,
+) -> (biom.Table, DNAFASTAFormat):
     dereplicated_sequences = DNAFASTAFormat()
+
     with tempfile.NamedTemporaryFile(mode='w+') as out_uc:
         seqs_fp = '%s/seqs.fna' % str(sequences)
-        cmd = ['vsearch',
-               '--derep_prefix' if derep_prefix else '--derep_fulllength',
-               seqs_fp,
-               '--output', str(dereplicated_sequences),
-               '--relabel_sha1', '--relabel_keep',
-               '--uc', out_uc.name,
-               '--xsize',
-               '--minseqlength', str(min_seq_length),
-               '--minuniquesize', str(min_unique_size),
-               '--fasta_width', '0']
+        cmd = [
+            'vsearch',
+            '--derep_prefix' if derep_prefix else '--derep_fulllength',
+            seqs_fp,
+            '--output', str(dereplicated_sequences),
+            '--relabel_sha1',
+            '--relabel_keep',
+            '--uc', out_uc.name,
+            '--xsize',
+            '--minseqlength', str(min_seq_length),
+            '--minuniquesize', str(min_unique_size),
+            '--fasta_width', '0'
+        ]
         run_command(cmd)
+
         out_uc.seek(0)
         table = parse_uc(out_uc)
-    id_map = {e.metadata['description']: e.metadata['id']
-              for e in skbio.io.read(str(dereplicated_sequences),
-                                     constructor=skbio.DNA,
-                                     format='fasta')}
-    table.update_ids(id_map=id_map, axis='observation')
+
+    id_map = {
+        e.metadata['description']: e.metadata['id'] for e in skbio.io.read(
+            str(dereplicated_sequences),
+            constructor=skbio.DNA,
+            format='fasta'
+        )
+    }
+
+    # keep only sequence ids that are in the dereplicated sequences
+    dereplicated_ids = list(id_map.keys())
+    table = table.filter(dereplicated_ids, axis='observation')
+
+    # rename feature ids to sha1 sequence hashes
+    table = table.update_ids(id_map=id_map, axis='observation')
+
     return table, dereplicated_sequences
