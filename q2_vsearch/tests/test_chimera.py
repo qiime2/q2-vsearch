@@ -125,13 +125,9 @@ class UchimeDenovoTests(TestPluginBase):
         sequences_fp = self.get_data_path('uchime-versions.fasta')
         input_sequences = DNAFASTAFormat(sequences_fp, mode='r')
         input_table = biom.Table(
-            np.array([
-                [100, 101, 103],
-                [99, 98, 99],
-                [4, 5, 6],
-            ]),
+            np.array([[485], [315], [146],]),
             ['feature1', 'feature2', 'feature3'],
-            ['sample1', 'sample2', 'sample3']
+            ['sample1']
         )
 
         with redirected_stdio(stderr=os.devnull):
@@ -155,8 +151,8 @@ class UchimeDenovoTests(TestPluginBase):
         self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0239)
         self.assertEqual(stats2_df.loc['feature3', 'YN'], 'Y')
 
-        self.assertEqual(stats3_df.loc['feature3', 'score'], 0.0239)
-        self.assertEqual(stats3_df.loc['feature3', 'YN'], 'Y')
+        self.assertEqual(stats3_df.loc['feature3', 'score'], 0)
+        self.assertEqual(stats3_df.loc['feature3', 'YN'], 'N')
 
 
 class UchimeRefTests(TestPluginBase):
