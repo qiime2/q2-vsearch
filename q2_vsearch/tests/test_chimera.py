@@ -10,6 +10,7 @@ import os
 
 import biom
 import numpy as np
+import pandas as pd
 
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
@@ -115,6 +116,47 @@ class UchimeDenovoTests(TestPluginBase):
         self.assertTrue('--mindiv 0.5' in cmd)
         self.assertTrue('--minh 0.42' in cmd)
         self.assertTrue('--xn 9.0' in cmd)
+
+    def test_different_uchime_methods(self):
+        '''
+        Tests that the different uchime algorithms (uchime, uchime2, uchime3)
+        exhibit different, expected behavior.
+        '''
+        sequences_fp = self.get_data_path('uchime-versions.fasta')
+        input_sequences = DNAFASTAFormat(sequences_fp, mode='r')
+        input_table = biom.Table(
+            np.array([
+                [100, 101, 103],
+                [99, 98, 99],
+                [4, 5, 6],
+            ]),
+            ['feature1', 'feature2', 'feature3'],
+            ['sample1', 'sample2', 'sample3']
+        )
+
+        with redirected_stdio(stderr=os.devnull):
+            _, _, stats = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime',
+            )
+            _, _, stats2 = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime2',
+            )
+            _, _, stats3 = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime3',
+            )
+
+        stats_df = stats.view(pd.DataFrame)
+        stats2_df = stats2.view(pd.DataFrame)
+        stats3_df = stats3.view(pd.DataFrame)
+
+        self.assertEqual(stats_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats_df.loc['feature3', 'YN'], 'N')
+
+        self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats2_df.loc['feature3', 'YN'], 'Y')
+
+        self.assertEqual(stats3_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats3_df.loc['feature3', 'YN'], 'Y')
 
 
 class UchimeRefTests(TestPluginBase):
