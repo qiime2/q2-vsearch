@@ -13,7 +13,7 @@ requirements:
   - wheel
   run:
   - python {{ python }}
-  - vsearch
+  - vsearch {{ vsearch }}
   - scikit-bio {{ scikit_bio }}
   - biom-format {{ biom_format }}
   - numpy
