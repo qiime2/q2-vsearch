@@ -10,6 +10,7 @@ import os
 
 import biom
 import numpy as np
+import pandas as pd
 
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
@@ -47,6 +48,7 @@ class UchimeDenovoTests(TestPluginBase):
 
         obs_chime = _read_seqs(chime)
         exp_chime = [self.input_sequences_list[3]]
+        # >feature4 is the chimera!
         self.assertEqual(obs_chime, exp_chime)
 
         # sequences are reverse-sorted by abundance in output
@@ -105,13 +107,52 @@ class UchimeDenovoTests(TestPluginBase):
         with redirected_stdio(stderr=os.devnull):
             cmd, chime, nonchime, stats = _uchime_denovo(
                 sequences=self.input_sequences, table=self.input_table,
+                method='uchime3',
                 dn=42.42, mindiffs=4, mindiv=0.5, minh=0.42, xn=9.0)
         cmd = ' '.join(cmd)
+        self.assertTrue('--uchime3_denovo' in cmd)
         self.assertTrue('--dn 42.42' in cmd)
         self.assertTrue('--mindiffs 4' in cmd)
         self.assertTrue('--mindiv 0.5' in cmd)
         self.assertTrue('--minh 0.42' in cmd)
         self.assertTrue('--xn 9.0' in cmd)
+
+    def test_different_uchime_methods(self):
+        '''
+        Tests that the different uchime algorithms (uchime, uchime2, uchime3)
+        exhibit different, expected behavior.
+        '''
+        sequences_fp = self.get_data_path('uchime-versions.fasta')
+        input_sequences = DNAFASTAFormat(sequences_fp, mode='r')
+        input_table = biom.Table(
+            np.array([[485], [315], [146],]),
+            ['feature1', 'feature2', 'feature3'],
+            ['sample1']
+        )
+
+        with redirected_stdio(stderr=os.devnull):
+            _, _, stats = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime',
+            )
+            _, _, stats2 = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime2',
+            )
+            _, _, stats3 = uchime_denovo(
+                sequences=input_sequences, table=input_table, method='uchime3',
+            )
+
+        stats_df = stats.view(pd.DataFrame)
+        stats2_df = stats2.view(pd.DataFrame)
+        stats3_df = stats3.view(pd.DataFrame)
+
+        self.assertEqual(stats_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats_df.loc['feature3', 'YN'], 'N')
+
+        self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats2_df.loc['feature3', 'YN'], 'Y')
+
+        self.assertEqual(stats3_df.loc['feature3', 'score'], 0)
+        self.assertEqual(stats3_df.loc['feature3', 'YN'], 'N')
 
 
 class UchimeRefTests(TestPluginBase):
