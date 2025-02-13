@@ -9,7 +9,6 @@
 import collections
 
 import pandas as pd
-import numpy as np
 import qiime2
 
 from .plugin_setup import plugin
@@ -19,7 +18,7 @@ from ._format import UchimeStatsFmt
 # not chimeric, so being safe and making all fields other than
 # score strings
 _uchime_stats_header = collections.OrderedDict([
-     ('score', np.number),
+     ('score', float),
      ('feature-id', str),
      ('A', str),
      ('B', str),
