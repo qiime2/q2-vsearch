@@ -8,7 +8,7 @@
 
 import os
 import fileinput
-import pkg_resources
+import importlib
 import subprocess
 import pandas as pd
 from multiprocessing import Pool, cpu_count
@@ -18,7 +18,7 @@ from q2_types.per_sample_sequences import (
 )
 import q2templates
 
-TEMPLATES = pkg_resources.resource_filename('q2_vsearch', 'assets')
+TEMPLATES = importlib.resources.files('q2_vsearch') / 'assets'
 
 
 def _get_stats_easy(cmds_packed) -> None:
