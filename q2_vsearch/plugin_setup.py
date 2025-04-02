@@ -320,9 +320,9 @@ plugin.methods.register_function(
         'threads': ('The number of threads to use for computation. Does '
                     'not scale much past 4 threads.'),
         'qmin' : 'Minimun quality score accepted when reading FASTQ files',
-        'qminout': 'Minimum quality score used when writing FASTQ file'
+        'qminout': 'Minimum quality score used when writing FASTQ file',
         'qmax' : 'Maximum quality score accepted when reading FASTQ files',
-        'qmaxout': 'Maximum quality score used when writing FASTQ file'
+        'qmaxout': 'Maximum quality score used when writing FASTQ file',
     },
     output_descriptions={
         'merged_sequences': 'The merged sequences.',
