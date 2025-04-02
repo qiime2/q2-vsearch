@@ -32,7 +32,7 @@ _mp_defaults = {
     'threads': 1,
     'qmin': 0,
     'qminout': 0,
-    'qmax' : 41,
+    'qmax': 41,
     'qmaxout': 41,
 }
 
