@@ -319,10 +319,12 @@ plugin.methods.register_function(
                   'to be retained.'),
         'threads': ('The number of threads to use for computation. Does '
                     'not scale much past 4 threads.'),
-        'qmin': 'Minimun quality score accepted when reading FASTQ files',
-        'qminout': 'Minimum quality score used when writing FASTQ file',
-        'qmax': 'Maximum quality score accepted when reading FASTQ files',
-        'qmaxout': 'Maximum quality score used when writing FASTQ file',
+        'qmin': 'Minimum quality score accepted when reading FASTQ files.',
+        'qminout': ('Minimum quality score used when writing FASTQ files. '
+                    'Only applies to overlap region.'),
+        'qmax': 'Maximum quality score accepted when reading FASTQ files.',
+        'qmaxout': ('Maximum quality score used when writing FASTQ files. '
+                    'Only applies to overlap region.'),
     },
     output_descriptions={
         'merged_sequences': 'The merged sequences.',
