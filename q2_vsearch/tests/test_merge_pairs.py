@@ -333,3 +333,55 @@ class MergePairsTests(TestPluginBase):
 
         # confirm altered parameter was passed to vsearch
         self.assertTrue('--threads 2' in ' '.join(cmd))
+
+    def test_merge_pairs_alt_qmin(self):
+        with redirected_stdio(stderr=os.devnull):
+            cmd, obs, _ = _merge_pairs_w_command_output(
+                self.input_seqs, qmin=1)
+
+        # sanity check the output
+        self._test_manifest(obs)
+        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 3)
+
+        # confirm altered parameter was passed to vsearch
+        self.assertTrue('--fastq_qmin 1' in ' '.join(cmd))
+
+    def test_merge_pairs_alt_qminout(self):
+        with redirected_stdio(stderr=os.devnull):
+            cmd, obs, _ = _merge_pairs_w_command_output(
+                self.input_seqs, qminout=1)
+
+        # sanity check the output
+        self._test_manifest(obs)
+        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 3)
+
+        # confirm altered parameter was passed to vsearch
+        self.assertTrue('--fastq_qminout 1' in ' '.join(cmd))
+
+    def test_merge_pairs_alt_qmax(self):
+        with redirected_stdio(stderr=os.devnull):
+            cmd, obs, _ = _merge_pairs_w_command_output(
+                self.input_seqs, qmax=50)
+
+        # sanity check the output
+        self._test_manifest(obs)
+        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 3)
+
+        # confirm altered parameter was passed to vsearch
+        self.assertTrue('--fastq_qmax 50' in ' '.join(cmd))
+
+    def test_merge_pairs_alt_qmaxout(self):
+        with redirected_stdio(stderr=os.devnull):
+            cmd, obs, _ = _merge_pairs_w_command_output(
+                self.input_seqs, qmaxout=50)
+
+        # sanity check the output
+        self._test_manifest(obs)
+        output_fastqs = list(obs.sequences.iter_views(FastqGzFormat))
+        self.assertEqual(len(output_fastqs), 3)
+
+        # confirm altered parameter was passed to vsearch
+        self.assertTrue('--fastq_qmaxout 50' in ' '.join(cmd))

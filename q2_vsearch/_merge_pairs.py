@@ -29,7 +29,11 @@ _mp_defaults = {
     'minmergelen': None,
     'maxmergelen': None,
     'maxee': None,
-    'threads': 1
+    'threads': 1,
+    'qmin': 0,
+    'qminout': 0,
+    'qmax': 41,
+    'qmaxout': 41,
 }
 
 
@@ -45,13 +49,18 @@ def merge_pairs(
     maxmergelen: int = _mp_defaults['maxmergelen'],
     maxee: float = _mp_defaults['maxee'],
     threads: int = _mp_defaults['threads'],
+    qmin: int = _mp_defaults['qmin'],
+    qminout: int = _mp_defaults['qminout'],
+    qmax: int = _mp_defaults['qmax'],
+    qmaxout: int = _mp_defaults['qmaxout'],
 ) -> (
     SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt
 ):
     _, merged, unmerged = _merge_pairs_w_command_output(
         demultiplexed_seqs, truncqual, minlen, maxns, allowmergestagger,
-        minovlen, maxdiffs, minmergelen, maxmergelen, maxee, threads
+        minovlen, maxdiffs, minmergelen, maxmergelen, maxee, threads,
+        qmin, qminout, qmax, qmaxout
     )
 
     return merged, unmerged
@@ -69,6 +78,10 @@ def _merge_pairs_w_command_output(
     maxmergelen: int = _mp_defaults['maxmergelen'],
     maxee: float = _mp_defaults['maxee'],
     threads: int = _mp_defaults['threads'],
+    qmin: int = _mp_defaults['qmin'],
+    qminout: int = _mp_defaults['qminout'],
+    qmax: int = _mp_defaults['qmax'],
+    qmaxout: int = _mp_defaults['qmaxout'],
 ) -> (
     List[str],
     SingleLanePerSampleSingleEndFastqDirFmt,
@@ -141,10 +154,10 @@ def _merge_pairs_w_command_output(
             '--fastq_minlen', str(minlen),
             '--fastq_minovlen', str(minovlen),
             '--fastq_maxdiffs', str(maxdiffs),
-            '--fastq_qmin', '0',
-            '--fastq_qminout', '0',
-            '--fastq_qmax', '41',
-            '--fastq_qmaxout', '41',
+            '--fastq_qmin', str(qmin),
+            '--fastq_qminout', str(qminout),
+            '--fastq_qmax', str(qmax),
+            '--fastq_qmaxout', str(qmaxout),
             '--fasta_width', '0'
         ]
         if truncqual is not None:
