@@ -145,10 +145,15 @@ class UchimeDenovoTests(TestPluginBase):
         stats2_df = stats2.view(pd.DataFrame)
         stats3_df = stats3.view(pd.DataFrame)
 
-        self.assertEqual(stats_df.loc['feature3', 'score'], 0.0239)
+        # expected score has been updated to account for
+        # changes in uchime* methods as of vsearch 2.30
+        # xref issues:
+        # https://github.com/torognes/vsearch/issues/606
+        # https://github.com/torognes/vsearch/issues/591
+        self.assertEqual(stats_df.loc['feature3', 'score'], 0.0717)
         self.assertEqual(stats_df.loc['feature3', 'YN'], 'N')
 
-        self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0239)
+        self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0717)
         self.assertEqual(stats2_df.loc['feature3', 'YN'], 'Y')
 
         self.assertEqual(stats3_df.loc['feature3', 'score'], 0)
