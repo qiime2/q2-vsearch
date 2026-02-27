@@ -24,8 +24,18 @@ from .test_cluster_features import _read_seqs
 
 
 class UchimeDenovoTests(TestPluginBase):
-
     package = 'q2_vsearch.tests'
+
+    # helper for `test_different_uchime_methods`
+    # see docstring for more details
+    def _assert_stats_subset(self, obs_df, scores, yn):
+        exp = pd.DataFrame({'score': pd.Series(scores),
+                            'YN': pd.Series(yn)})
+
+        obs = obs_df.loc[exp.index, exp.columns].copy()
+        obs['score'] = obs['score'].astype(float)
+
+        pd.testing.assert_frame_equal(obs, exp)
 
     def setUp(self):
         super().setUp()
@@ -121,38 +131,81 @@ class UchimeDenovoTests(TestPluginBase):
         '''
         Tests that the different uchime algorithms (uchime, uchime2, uchime3)
         exhibit different, expected behavior.
+
+        Notes
+        -----
+        This test and accompanying test data has been updated as of 25 Feb 2026
+        to account for differing outputs that occurred in vsearch versions
+        between 2.22 and 2.30 - the dataset has been modified to match the
+        recommended toy dataset provided by Torbjørn Rognes.
+
+        https://github.com/torognes (github acct)
+
+        The following is a description from Torbjørn regarding the dataset and
+        the expected results:
+
+        I started with sequence P of 160 bp.
+        It was then duplicated into Q, A, and B.
+        In A I introduced a few substitutions in the second half of the
+        sequence, while in B I introduced a few substitutions in the first half
+        of the sequence.
+        Q is identical to P except for 1 substitution in each half of the
+        sequence, not in the same positions as the substitutions in A or B.
+        P and Q have an abundance of 1, while A and B have an abundance of 5.
+
+        P and Q could be chimeras with A and B as parents.
+        Using uchime_denovo both P and Q will be detected as chimeras due to
+        the similarities in each end of the sequences.
+        With uchime2_denovo only P will be recognized because it matches the
+        model of the combined A and B perfectly, while Q has mismatches and
+        will not be recognized.
+        In both cases the abundance skew (ratio) is 5, which is more than the
+        required 2.
+        However, in uchime3_denovo the abundance skew must be at least 16 by
+        default, which is not the case here, and no chimeras will be detected.
+
+        Relevant GH issues that further discuss this change:
+        https://github.com/torognes/vsearch/issues/606
+        https://github.com/torognes/vsearch/issues/591
         '''
         sequences_fp = self.get_data_path('uchime-versions.fasta')
         input_sequences = DNAFASTAFormat(sequences_fp, mode='r')
         input_table = biom.Table(
-            np.array([[485], [315], [146],]),
-            ['feature1', 'feature2', 'feature3'],
+            np.array([[5], [5], [1], [1]]),
+            ['A', 'B', 'P', 'Q'],
             ['sample1']
         )
 
-        with redirected_stdio(stderr=os.devnull):
-            _, _, stats = uchime_denovo(
-                sequences=input_sequences, table=input_table, method='uchime',
-            )
-            _, _, stats2 = uchime_denovo(
-                sequences=input_sequences, table=input_table, method='uchime2',
-            )
-            _, _, stats3 = uchime_denovo(
-                sequences=input_sequences, table=input_table, method='uchime3',
-            )
+        uchime_df = {}
+        for uchime_method in ['uchime', 'uchime2', 'uchime3']:
+            with redirected_stdio(stderr=os.devnull):
+                _, _, stats = uchime_denovo(
+                    sequences=input_sequences,
+                    table=input_table,
+                    method=uchime_method,
+                )
+                uchime_df[uchime_method] = stats.view(pd.DataFrame)
 
-        stats_df = stats.view(pd.DataFrame)
-        stats2_df = stats2.view(pd.DataFrame)
-        stats3_df = stats3.view(pd.DataFrame)
+        exp = {
+            'uchime': dict(
+                scores={'A': 0.0, 'B': 0.0, 'P': 0.6378, 'Q': 0.5375},
+                yn={'A': 'N', 'B': 'N', 'P': 'Y', 'Q': 'Y'},
+            ),
+            'uchime2': dict(
+                scores={'A': 0.0, 'B': 0.0, 'P': 0.6378, 'Q': 0.5375},
+                yn={'A': 'N', 'B': 'N', 'P': 'Y', 'Q': 'N'},
+            ),
+            'uchime3': dict(
+                scores={'A': 0.0, 'B': 0.0, 'P': 0.0, 'Q': 0.0},
+                yn={'A': 'N', 'B': 'N', 'P': 'N', 'Q': 'N'},
+            ),
+        }
 
-        self.assertEqual(stats_df.loc['feature3', 'score'], 0.0239)
-        self.assertEqual(stats_df.loc['feature3', 'YN'], 'N')
-
-        self.assertEqual(stats2_df.loc['feature3', 'score'], 0.0239)
-        self.assertEqual(stats2_df.loc['feature3', 'YN'], 'Y')
-
-        self.assertEqual(stats3_df.loc['feature3', 'score'], 0)
-        self.assertEqual(stats3_df.loc['feature3', 'YN'], 'N')
+        for uchime_method in ['uchime', 'uchime2', 'uchime3']:
+            self._assert_stats_subset(
+                uchime_df[uchime_method],
+                scores=exp[uchime_method]['scores'],
+                yn=exp[uchime_method]['yn'])
 
 
 class UchimeRefTests(TestPluginBase):
