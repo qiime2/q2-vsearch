@@ -80,7 +80,7 @@ def _fastq_stats(output_dir: str, sequences, threads) -> None:
     manifest = sequences.manifest
     # check if paired reads available
     try:
-        paired = manifest['reverse'][0] is not None
+        paired = manifest['reverse'].iloc[0] is not None
     except KeyError:
         paired = False
 
