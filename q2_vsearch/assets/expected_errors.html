@@ -1,0 +1,44 @@
+{% extends "tabbed.html" %}
+
+{% block title %}q2-vsearch : Expected Error{% endblock %}
+
+{% block head %}
+<script src="js/vega.min.js"></script>
+<script src="js/vega-embed.min.js"></script>
+<style media="screen">
+    #plots {
+        width: 100%;
+    }
+
+    #controls {
+        margin: 10px 0 25px 0;
+        font-size: 15px;
+    }
+
+    .vega-bind input[type="range"] {
+        display: inline-block;
+        width: 200px;
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block tabcontent %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1>vsearch - Expected Error</h1>
+        <div id="controls"></div>
+        <div id="plots"></div>
+    </div>
+</div>
+
+<script id="spec" type="application/json">
+{{ ee_spec }}
+</script>
+<script type="text/javascript">
+    var spec = JSON.parse(document.getElementById('spec').innerHTML);
+    vegaEmbed('#plots', spec, {'renderer': 'svg', 'bind': '#controls'}).then(function(result) {
+        result.view.logLevel(vega.Warn);
+    }).catch(console.error);
+</script>
+{% endblock %}

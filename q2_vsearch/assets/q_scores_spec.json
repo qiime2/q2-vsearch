@@ -1,0 +1,221 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Quality scores, reads kept when truncated at the first low quality base, and read lengths, from vsearch fastq_eestats and fastq_stats, one column per read direction",
+  "autosize": {"type": "fit-x", "contains": "padding"},
+  "padding": 5,
+  "height": {"signal": "3 * plot_height + 2 * gap"},
+  "config": {
+    "title": {"fontSize": 15, "subtitleFontSize": 13},
+    "axis": {"labelFontSize": 12, "titleFontSize": 13},
+    "legend": {"labelFontSize": 12, "titleFontSize": 13}
+  },
+  "signals": [
+    {
+      "name": "width",
+      "init": "isFinite(containerSize()[0]) ? containerSize()[0] : 800",
+      "on": [{"update": "isFinite(containerSize()[0]) ? containerSize()[0] : 800", "events": "window:resize"}]
+    },
+    {"name": "directions", "value": {"{{REPLACE_PARAM}}": "directions"}},
+    {"name": "gap", "value": 120},
+    {"name": "col_gap", "value": 60},
+    {"name": "col_width", "update": "(width - (length(directions) - 1) * col_gap) / length(directions)"},
+    {
+      "name": "plot_height",
+      "value": 240,
+      "bind": {"input": "range", "min": 120, "max": 480, "step": 10, "name": "Plot height "}
+    },
+    {
+      "name": "hover_pos",
+      "value": null,
+      "on": [
+        {"events": "mousemove", "update": "x() < 0 || x() % (col_width + col_gap) > col_width ? null : clamp(round(invert('x', x() % (col_width + col_gap))), domain('x')[0], domain('x')[1])"},
+        {"events": "view:mouseleave", "update": "null"}
+      ]
+    }
+  ],
+  "data": [
+    {"name": "eestats", "values": {"{{REPLACE_PARAM}}": "eestats"}},
+    {"name": "truncq", "values": {"{{REPLACE_PARAM}}": "truncq"}},
+    {"name": "lengths", "values": {"{{REPLACE_PARAM}}": "lengths"}},
+    {
+      "name": "ee_cursor",
+      "source": "eestats",
+      "transform": [
+        {"type": "filter", "expr": "hover_pos !== null && datum.Pos === hover_pos"},
+        {"type": "formula", "as": "q_text", "expr": "'Position ' + datum.Pos + ':  median Q ' + datum.Med_Q + ',  mean ' + format(datum.Mean_Q, '.1f') + ',  middle 50% ' + datum.Low_Q + ' to ' + datum.Hi_Q"}
+      ]
+    },
+    {
+      "name": "truncq_text",
+      "source": "truncq",
+      "transform": [
+        {"type": "filter", "expr": "hover_pos !== null && datum.Length === hover_pos"},
+        {"type": "formula", "as": "label", "expr": "datum.series + ': ' + format(datum.PctReads, '.1f') + '%'"},
+        {"type": "aggregate", "groupby": ["direction"], "fields": ["label"], "ops": ["values"], "as": ["rows"]},
+        {"type": "formula", "as": "text", "expr": "hover_pos + ' bases:  ' + join(pluck(datum.rows, 'label'), ',  ')"}
+      ]
+    },
+    {
+      "name": "lengths_cursor",
+      "source": "lengths",
+      "transform": [
+        {"type": "filter", "expr": "hover_pos !== null && datum.Length === hover_pos"},
+        {"type": "formula", "as": "text", "expr": "datum.Length + ' bases:  ' + format(datum.Reads, ',') + ' reads (' + format(datum.PctReads, '.1f') + '%)'"}
+      ]
+    }
+  ],
+  "scales": [
+    {"name": "x", "type": "linear", "domain": {"data": "eestats", "field": "Pos"}, "range": [0, {"signal": "col_width"}], "zero": false, "nice": false},
+    {"name": "y_q", "type": "linear", "domain": {"data": "eestats", "fields": ["Hi_Q", "Mean_Q"]}, "zero": true, "nice": true, "range": [{"signal": "plot_height"}, 0]},
+    {"name": "y_pct", "type": "linear", "domain": [0, 100], "range": [{"signal": "plot_height"}, 0]},
+    {"name": "y_len", "type": "linear", "domain": {"data": "lengths", "field": "PctReads"}, "zero": true, "nice": true, "range": [{"signal": "plot_height"}, 0]},
+    {"name": "color_q", "type": "ordinal", "domain": {"{{REPLACE_PARAM}}": "q_series"}, "range": ["#9ecae9", "#4c78a8", "#f58518", "#e45756"]}
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "name": "quality_plot",
+      "from": {"facet": {"name": "ee_q", "data": "eestats", "groupby": "direction"}},
+      "title": {
+        "text": {"signal": "upper(slice(parent.direction, 0, 1)) + slice(parent.direction, 1) + ' reads: quality score by position'"},
+        "anchor": "start",
+        "subtitle": {"signal": "indexof(pluck(data('ee_cursor'), 'direction'), parent.direction) < 0 ? 'Line: median. Dashed: mean. Band: middle 50% of reads.' : data('ee_cursor')[indexof(pluck(data('ee_cursor'), 'direction'), parent.direction)].q_text"},
+        "limit": {"signal": "col_width"},
+        "offset": 8
+      },
+      "encode": {"update": {
+        "x": {"signal": "indexof(directions, datum.direction) * (col_width + col_gap)"},
+        "y": {"value": 0},
+        "width": {"signal": "col_width"}, "height": {"signal": "plot_height"}
+      }},
+      "axes": [
+        {"orient": "bottom", "scale": "x", "title": "Position in read (bases)"},
+        {"orient": "left", "scale": "y_q", "title": "Quality score", "grid": true}
+      ],
+      "marks": [
+        {
+          "type": "area",
+          "from": {"data": "ee_q"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"},
+            "y": {"scale": "y_q", "field": "Hi_Q"}, "y2": {"scale": "y_q", "field": "Low_Q"},
+            "fill": {"value": "#4c78a8"}, "fillOpacity": {"value": 0.25}
+          }}
+        },
+        {
+          "type": "line",
+          "from": {"data": "ee_q"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"}, "y": {"scale": "y_q", "field": "Med_Q"},
+            "stroke": {"value": "#4c78a8"}, "strokeWidth": {"value": 2}
+          }}
+        },
+        {
+          "type": "line",
+          "from": {"data": "ee_q"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"}, "y": {"scale": "y_q", "field": "Mean_Q"},
+            "stroke": {"value": "#4c78a8"}, "strokeWidth": {"value": 1.5}, "strokeDash": {"value": [5, 3]}
+          }}
+        },
+        {
+          "type": "rule",
+          "encode": {"update": {
+            "x": {"scale": "x", "signal": "hover_pos === null ? 0 : hover_pos"},
+            "y": {"value": 0}, "y2": {"signal": "plot_height"},
+            "stroke": {"value": "#666"}, "opacity": {"signal": "hover_pos === null ? 0 : 1"}
+          }}
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "truncq_plot",
+      "from": {"facet": {"name": "truncq_dir", "data": "truncq", "groupby": "direction"}},
+      "title": {
+        "text": {"signal": "upper(slice(parent.direction, 0, 1)) + slice(parent.direction, 1) + ' reads: truncating at the first low quality base'"},
+        "anchor": "start",
+        "subtitle": {"signal": "indexof(pluck(data('truncq_text'), 'direction'), parent.direction) < 0 ? 'Reads still at least this long after cutting each at its first base at or under a Q score.' : data('truncq_text')[indexof(pluck(data('truncq_text'), 'direction'), parent.direction)].text"},
+        "limit": {"signal": "col_width"},
+        "offset": 8
+      },
+      "encode": {"update": {
+        "x": {"signal": "indexof(directions, datum.direction) * (col_width + col_gap)"},
+        "y": {"signal": "plot_height + gap"},
+        "width": {"signal": "col_width"}, "height": {"signal": "plot_height"}
+      }},
+      "axes": [
+        {"orient": "bottom", "scale": "x", "title": "Length (bases)"},
+        {"orient": "left", "scale": "y_pct", "title": "Reads kept (%)", "grid": true}
+      ],
+      "legends": [{"stroke": "color_q", "orient": "bottom-left", "symbolType": "stroke", "fillColor": "rgba(255, 255, 255, 0.85)", "padding": 6}],
+      "marks": [
+        {
+          "type": "group",
+          "from": {"facet": {"name": "truncq_series", "data": "truncq_dir", "groupby": "series"}},
+          "marks": [{
+            "type": "line",
+            "from": {"data": "truncq_series"},
+            "sort": {"field": "datum.Length"},
+            "encode": {"update": {
+              "x": {"scale": "x", "field": "Length"},
+              "y": {"scale": "y_pct", "field": "PctReads"},
+              "stroke": {"scale": "color_q", "field": "series"},
+              "strokeWidth": {"value": 2}
+            }}
+          }]
+        },
+        {
+          "type": "rule",
+          "encode": {"update": {
+            "x": {"scale": "x", "signal": "hover_pos === null ? 0 : hover_pos"},
+            "y": {"value": 0}, "y2": {"signal": "plot_height"},
+            "stroke": {"value": "#666"}, "opacity": {"signal": "hover_pos === null ? 0 : 1"}
+          }}
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "lengths_plot",
+      "from": {"facet": {"name": "lengths_dir", "data": "lengths", "groupby": "direction"}},
+      "title": {
+        "text": {"signal": "upper(slice(parent.direction, 0, 1)) + slice(parent.direction, 1) + ' reads: read length distribution'"},
+        "anchor": "start",
+        "subtitle": {"signal": "indexof(pluck(data('lengths_cursor'), 'direction'), parent.direction) < 0 ? (hover_pos === null ? 'Percent of reads of each length.' : hover_pos + ' bases:  no reads') : data('lengths_cursor')[indexof(pluck(data('lengths_cursor'), 'direction'), parent.direction)].text"},
+        "limit": {"signal": "col_width"},
+        "offset": 8
+      },
+      "encode": {"update": {
+        "x": {"signal": "indexof(directions, datum.direction) * (col_width + col_gap)"},
+        "y": {"signal": "2 * (plot_height + gap)"},
+        "width": {"signal": "col_width"}, "height": {"signal": "plot_height"}
+      }},
+      "axes": [
+        {"orient": "bottom", "scale": "x", "title": "Read length (bases)"},
+        {"orient": "left", "scale": "y_len", "title": "Reads (%)", "grid": true}
+      ],
+      "marks": [
+        {
+          "type": "rect",
+          "from": {"data": "lengths_dir"},
+          "encode": {"update": {
+            "xc": {"scale": "x", "field": "Length"},
+            "width": {"signal": "max(2, col_width / (domain('x')[1] - domain('x')[0] + 1))"},
+            "y": {"scale": "y_len", "field": "PctReads"}, "y2": {"scale": "y_len", "value": 0},
+            "fill": {"value": "#4c78a8"},
+            "tooltip": {"signal": "{'length': datum.Length, 'reads': format(datum.Reads, ','), 'percent': format(datum.PctReads, '.1f') + '%'}"}
+          }}
+        },
+        {
+          "type": "rule",
+          "encode": {"update": {
+            "x": {"scale": "x", "signal": "hover_pos === null ? 0 : hover_pos"},
+            "y": {"value": 0}, "y2": {"signal": "plot_height"},
+            "stroke": {"value": "#666"}, "opacity": {"signal": "hover_pos === null ? 0 : 1"}
+          }}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Expected errors along the read, reads kept by truncation length and max expected errors, from vsearch fastq_eestats and fastq_eestats2, one column per read direction",
+  "autosize": {"type": "fit-x", "contains": "padding"},
+  "padding": 5,
+  "height": {"signal": "2 * plot_height + gap"},
+  "config": {
+    "title": {"fontSize": 15, "subtitleFontSize": 13},
+    "axis": {"labelFontSize": 12, "titleFontSize": 13},
+    "legend": {"labelFontSize": 12, "titleFontSize": 13}
+  },
+  "signals": [
+    {
+      "name": "width",
+      "init": "isFinite(containerSize()[0]) ? containerSize()[0] : 800",
+      "on": [{"update": "isFinite(containerSize()[0]) ? containerSize()[0] : 800", "events": "window:resize"}]
+    },
+    {"name": "directions", "value": {"{{REPLACE_PARAM}}": "directions"}},
+    {"name": "gap", "value": 120},
+    {"name": "col_gap", "value": 60},
+    {"name": "col_width", "update": "(width - (length(directions) - 1) * col_gap) / length(directions)"},
+    {
+      "name": "plot_height",
+      "value": 240,
+      "bind": {"input": "range", "min": 120, "max": 480, "step": 10, "name": "Plot height "}
+    },
+    {
+      "name": "hover_pos",
+      "value": null,
+      "on": [
+        {"events": "mousemove", "update": "x() < 0 || x() % (col_width + col_gap) > col_width ? null : clamp(round(invert('x', x() % (col_width + col_gap))), domain('x')[0], domain('x')[1])"},
+        {"events": "view:mouseleave", "update": "null"}
+      ]
+    }
+  ],
+  "data": [
+    {"name": "eestats", "values": {"{{REPLACE_PARAM}}": "eestats"}},
+    {"name": "kept", "values": {"{{REPLACE_PARAM}}": "kept"}},
+    {"name": "maxees", "values": {"{{REPLACE_PARAM}}": "maxees"}},
+    {
+      "name": "ee_cursor",
+      "source": "eestats",
+      "transform": [
+        {"type": "filter", "expr": "hover_pos !== null && datum.Pos === hover_pos"},
+        {"type": "formula", "as": "ee_text", "expr": "'Position ' + datum.Pos + ':  median EE ' + format(datum.Med_EE, '.2f') + ',  mean ' + format(datum.Mean_EE, '.2f') + ',  middle 50% ' + format(datum.Low_EE, '.2f') + ' to ' + format(datum.Hi_EE, '.2f')"}
+      ]
+    },
+    {
+      "name": "kept_cursor",
+      "source": "kept",
+      "transform": [
+        {"type": "filter", "expr": "hover_pos !== null && datum.Length === hover_pos"},
+        {"type": "formula", "as": "label", "expr": "replace(datum.series, 'max EE ', 'EE ≤ ') + ': ' + format(datum.PctReads, '.1f') + '%'"}
+      ]
+    },
+    {
+      "name": "kept_text",
+      "source": "kept_cursor",
+      "transform": [
+        {"type": "collect", "sort": {"field": "series"}},
+        {"type": "aggregate", "groupby": ["direction"], "fields": ["label"], "ops": ["values"], "as": ["rows"]},
+        {"type": "formula", "as": "text", "expr": "[datum.rows[0].Length + ' bases:  ' + datum.rows[0].label, join(pluck(slice(datum.rows, 1), 'label'), ',  ')]"}
+      ]
+    }
+  ],
+  "scales": [
+    {"name": "x", "type": "linear", "domain": {"data": "eestats", "field": "Pos"}, "range": [0, {"signal": "col_width"}], "zero": false, "nice": false},
+    {"name": "color", "type": "ordinal", "domain": {"{{REPLACE_PARAM}}": "series"}, "range": ["#9e9e9e", "#4c78a8", "#f58518", "#e45756", "#54a24b"]},
+    {
+      "name": "y_ee", "type": "linear", "zero": true, "nice": true, "clamp": true,
+      "domain": {"fields": [{"data": "eestats", "field": "Hi_EE"}, {"data": "maxees", "field": "maxee"}]},
+      "range": [{"signal": "plot_height"}, 0]
+    },
+    {"name": "y_kept", "type": "linear", "domain": [0, 100], "range": [{"signal": "plot_height"}, 0]}
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "name": "ee_plot",
+      "from": {"facet": {"name": "ee_e", "data": "eestats", "groupby": "direction"}},
+      "title": {
+        "text": {"signal": "upper(slice(parent.direction, 0, 1)) + slice(parent.direction, 1) + ' reads: expected errors'"},
+        "anchor": "start",
+        "subtitle": {"signal": "indexof(pluck(data('ee_cursor'), 'direction'), parent.direction) < 0 ? 'Summed up to each position. Line: median. Dashed: mean. Band: middle 50%.' : data('ee_cursor')[indexof(pluck(data('ee_cursor'), 'direction'), parent.direction)].ee_text"},
+        "limit": {"signal": "col_width"},
+        "offset": 8
+      },
+      "encode": {"update": {
+        "x": {"signal": "indexof(directions, datum.direction) * (col_width + col_gap)"},
+        "y": {"value": 0},
+        "width": {"signal": "col_width"}, "height": {"signal": "plot_height"}
+      }},
+      "axes": [
+        {"orient": "bottom", "scale": "x", "title": "Position in read (bases)"},
+        {"orient": "left", "scale": "y_ee", "title": "Expected errors", "grid": true}
+      ],
+      "marks": [
+        {
+          "type": "area",
+          "from": {"data": "ee_e"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"},
+            "y": {"scale": "y_ee", "field": "Hi_EE"}, "y2": {"scale": "y_ee", "field": "Low_EE"},
+            "fill": {"value": "#e45756"}, "fillOpacity": {"value": 0.2}
+          }}
+        },
+        {
+          "type": "line",
+          "from": {"data": "ee_e"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"}, "y": {"scale": "y_ee", "field": "Med_EE"},
+            "stroke": {"value": "#c03a3a"}, "strokeWidth": {"value": 2}
+          }}
+        },
+        {
+          "type": "line",
+          "from": {"data": "ee_e"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Pos"}, "y": {"scale": "y_ee", "field": "Mean_EE"},
+            "stroke": {"value": "#c03a3a"}, "strokeWidth": {"value": 1.5}, "strokeDash": {"value": [5, 3]}
+          }}
+        },
+        {
+          "type": "rule",
+          "from": {"data": "maxees"},
+          "encode": {"update": {
+            "x": {"value": 0}, "x2": {"signal": "col_width"},
+            "y": {"scale": "y_ee", "field": "maxee"},
+            "stroke": {"scale": "color", "field": "series"}, "strokeDash": {"value": [2, 2]}
+          }}
+        },
+        {
+          "type": "text",
+          "from": {"data": "maxees"},
+          "encode": {"update": {
+            "x": {"value": 4}, "y": {"scale": "y_ee", "field": "maxee", "offset": -3},
+            "text": {"field": "series"}, "fill": {"scale": "color", "field": "series"},
+            "fontSize": {"value": 12}, "baseline": {"value": "bottom"}
+          }}
+        },
+        {
+          "type": "rule",
+          "encode": {"update": {
+            "x": {"scale": "x", "signal": "hover_pos === null ? 0 : hover_pos"},
+            "y": {"value": 0}, "y2": {"signal": "plot_height"},
+            "stroke": {"value": "#666"}, "opacity": {"signal": "hover_pos === null ? 0 : 1"}
+          }}
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "kept_plot",
+      "from": {"facet": {"name": "kept_dir", "data": "kept", "groupby": "direction"}},
+      "title": {
+        "text": {"signal": "upper(slice(parent.direction, 0, 1)) + slice(parent.direction, 1) + ' reads: reads kept by truncation length'"},
+        "anchor": "start",
+        "subtitle": {"signal": "indexof(pluck(data('kept_text'), 'direction'), parent.direction) < 0 ? ['Truncate reads to a length and drop shorter reads (length only),', 'then also drop reads over a max expected errors (max EE).'] : data('kept_text')[indexof(pluck(data('kept_text'), 'direction'), parent.direction)].text"},
+        "limit": {"signal": "col_width"},
+        "offset": 8
+      },
+      "encode": {"update": {
+        "x": {"signal": "indexof(directions, datum.direction) * (col_width + col_gap)"},
+        "y": {"signal": "plot_height + gap"},
+        "width": {"signal": "col_width"}, "height": {"signal": "plot_height"}
+      }},
+      "axes": [
+        {"orient": "bottom", "scale": "x", "title": "Truncation length (bases)"},
+        {"orient": "left", "scale": "y_kept", "title": "Reads kept (%)", "grid": true}
+      ],
+      "legends": [{"stroke": "color", "orient": "bottom-left", "symbolType": "stroke", "fillColor": "rgba(255, 255, 255, 0.85)", "padding": 6}],
+      "marks": [
+        {
+          "type": "group",
+          "from": {"facet": {"name": "kept_series", "data": "kept_dir", "groupby": "series"}},
+          "marks": [{
+            "type": "line",
+            "from": {"data": "kept_series"},
+            "encode": {"update": {
+              "x": {"scale": "x", "field": "Length"},
+              "y": {"scale": "y_kept", "field": "PctReads"},
+              "stroke": {"scale": "color", "field": "series"},
+              "strokeWidth": {"value": 2}
+            }}
+          }]
+        },
+        {
+          "type": "rule",
+          "encode": {"update": {
+            "x": {"scale": "x", "signal": "hover_pos === null ? 0 : hover_pos"},
+            "y": {"value": 0}, "y2": {"signal": "plot_height"},
+            "stroke": {"value": "#666"}, "opacity": {"signal": "hover_pos === null ? 0 : 1"}
+          }}
+        },
+        {
+          "type": "symbol",
+          "from": {"data": "kept_cursor"},
+          "encode": {"update": {
+            "x": {"scale": "x", "field": "Length"},
+            "y": {"scale": "y_kept", "field": "PctReads"},
+            "fill": {"scale": "color", "field": "series"},
+            "stroke": {"value": "white"},
+            "size": {"value": 60},
+            "opacity": {"signal": "datum.direction === parent.direction ? 1 : 0"},
+            "tooltip": {"signal": "datum.direction === parent.direction ? {'filter': datum.series, 'length': datum.Length, 'reads kept': format(datum.PctReads, '.1f') + '%'} : null"}
+          }}
+        }
+      ]
+    }
+  ]
+}

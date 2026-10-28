@@ -466,7 +466,9 @@ plugin.visualizers.register_function(
     },
     name='Fastq stats with vsearch.',
     description='A fastq overview via vsearch\'s fastq_stats, fastq_eestats '
-                'and fastq_eestats2 utilities. Please see '
+                'and fastq_eestats2 utilities, with interactive plots of '
+                'quality scores, expected errors and reads kept by '
+                'truncation length. Please see '
                 'https://github.com/torognes/vsearch for detailed '
                 'documentation of these tools.',
 )
